@@ -1,0 +1,84 @@
+include config.mk
+
+.PHONY: build software tests
+# 第一部分：编译 
+# 编译vortex/目录下的：第三方依赖、硬件、模拟器、kernel、runtime、tests
+# config.mk 中定义了 一些整体的 环境变量
+# 通过调用各个目录下的Makefile文件，对各部分进行编译
+all:
+	$(MAKE) -C $(VORTEX_HOME)/third_party
+	$(MAKE) -C hw
+	$(MAKE) -C sim
+	$(MAKE) -C kernel
+	$(MAKE) -C runtime
+	$(MAKE) -C tests
+
+build:
+	$(MAKE) -C hw
+	$(MAKE) -C sim
+	$(MAKE) -C kernel
+	$(MAKE) -C runtime
+	$(MAKE) -C tests
+
+software:
+	$(MAKE) -C hw
+	$(MAKE) -C kernel
+	$(MAKE) -C runtime/stub
+
+tests:
+	$(MAKE) -C tests
+
+clean-build:
+	$(MAKE) -C hw clean
+	$(MAKE) -C sim clean
+	$(MAKE) -C kernel clean
+	$(MAKE) -C runtime clean
+	$(MAKE) -C tests clean
+
+clean: clean-build
+	$(MAKE) -C $(VORTEX_HOME)/third_party clean
+
+# 第二部分：安装     INSTALLDIR ?= /mnt/ssd2/lao/vortex-2.2/build  定义在config.mk中
+# 所谓安装就是 创建安装目录，将编译好的库文件、头文件等复制到指定的目录下
+# Install setup
+KERNEL_INC_DST = $(INSTALLDIR)/kernel/include
+KERNEL_LIB_DST = $(INSTALLDIR)/kernel/lib$(XLEN)
+RUNTIME_INC_DST = $(INSTALLDIR)/runtime/include
+RUNTIME_LIB_DST = $(INSTALLDIR)/runtime/lib
+
+# 通过wildcard函数获取目录下的所有文件
+KERNEL_HEADERS = $(wildcard $(VORTEX_HOME)/kernel/include/*.h)
+KERNEL_LIBS = $(wildcard kernel/*.a)
+RUNTIME_HEADERS = $(wildcard $(VORTEX_HOME)/runtime/include/*.h)
+RUNTIME_LIBS = $(wildcard runtime/*.so)
+
+INSTALL_DIRS = $(KERNEL_LIB_DST) $(RUNTIME_LIB_DST) $(KERNEL_INC_DST) $(RUNTIME_INC_DST)
+
+# 创建安装目录，buil/kernel  buil/runtime
+$(INSTALL_DIRS):
+	mkdir -p $@
+
+# 复制文件到安装目录；  也就是vortex/  下面的一些 头文件、库文件 复制到 build/ 下;
+$(KERNEL_INC_DST)/VX_types.h: hw/VX_types.h | $(KERNEL_INC_DST)
+	cp $< $@
+
+$(KERNEL_INC_DST)/%.h: $(VORTEX_HOME)/kernel/include/%.h | $(KERNEL_INC_DST)
+	cp $< $@
+
+$(RUNTIME_INC_DST)/%.h: $(VORTEX_HOME)/runtime/include/%.h | $(RUNTIME_INC_DST)
+	cp $< $@
+
+$(KERNEL_LIB_DST)/%.a: kernel/%.a | $(KERNEL_LIB_DST)
+	cp $< $@
+
+$(RUNTIME_LIB_DST)/%.so: runtime/%.so | $(RUNTIME_LIB_DST)
+	cp $< $@
+
+#  注意一下 模式替换语法   自己之前没用过
+#  $(VARIABLE:OLD_PATTERN=NEW_PATTERN)
+install: $(INSTALL_DIRS) \
+         $(KERNEL_INC_DST)/VX_types.h \
+		 $(KERNEL_HEADERS:$(VORTEX_HOME)/kernel/include/%=$(KERNEL_INC_DST)/%) \
+         $(RUNTIME_HEADERS:$(VORTEX_HOME)/runtime/include/%=$(RUNTIME_INC_DST)/%) \
+		 $(KERNEL_LIBS:kernel/%=$(KERNEL_LIB_DST)/%) \
+		 $(RUNTIME_LIBS:runtime/%=$(RUNTIME_LIB_DST)/%)
