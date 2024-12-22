@@ -9,6 +9,7 @@ all: config
 
 config: VX_config.h VX_types.h
 
+# python脚本 将 vortex-2.2/HW/rtl/VX_config.vh 生成 VX_config.h
 VX_config.h: $(RTL_DIR)/VX_config.vh
 	$(SCRIPT_DIR)/gen_config.py -i $(RTL_DIR)/VX_config.vh -o VX_config.h
 

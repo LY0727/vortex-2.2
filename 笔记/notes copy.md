@@ -23,7 +23,7 @@
    4. 安装工具链，但是有时候网络也不太行；下载zip本地安装的话，需要理解一下脚本内容，自己写了一个压缩解压缩脚本。
       ./ci/toolchain_install.sh --all
    5. 三个额外的依赖：    注意依赖目录；ramulator需要clone release 2； clone后需要改文件夹名称，为 cvfpu;ramulator;softfloat;   或者改makefile也行
-      cd ../third_party
+      cd ../third_party ；  `改makefile比较好，因为后续sim的makefile中是用fpnew的名字`
       git clone  git@github.com:ucb-bar/berkeley-softfloat-3.git
       git clone  git@github.com:CMU-SAFARI/ramulator2.git
       git clone  git@github.com:openhwgroup/cvfpu.git
@@ -60,8 +60,6 @@
 1. makefile： 汇总调用6个子模块的makefile
 2. common.mk:  verilator编译，生成波形，查看波形
 3. subdir_dir下的makefile : 针对各个子模块；准备好相应的编译环境和编译选项，各种路径、编译标志和源文件列表等预备信息。**然后调用上层目录下的common.mk 进行verilator的仿真。**
-
-
 
 ## 仿真
 

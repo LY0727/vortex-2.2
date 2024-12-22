@@ -35,8 +35,8 @@ static void show_usage() {
 uint32_t num_threads = NUM_THREADS;
 uint32_t num_warps = NUM_WARPS;
 uint32_t num_cores = NUM_CORES;
-bool showStats = false;
-const char* program = nullptr;
+bool showStats = false;             // 是否显示统计信息
+const char* program = nullptr;      // 程序路径
 
 static void parse_args(int argc, char **argv) {
   	int c;
@@ -64,7 +64,8 @@ static void parse_args(int argc, char **argv) {
       		exit(-1);
     	}
 	}
-
+  // 解析剩余的参数，作为程序路径； 并且打印正在运行的程序
+  // optind 是 C标准库中，getopt 的全局变量，表示下一个要处理的参数的索引
 	if (optind < argc) {
 		program = argv[optind];
     std::cout << "Running " << program << "..." << std::endl;
@@ -100,7 +101,7 @@ int main(int argc, char **argv) {
   #endif
 	  processor.dcr_write(VX_DCR_BASE_MPM_CLASS, 0);
 
-    // load program
+    // load program    
     {
       std::string program_ext(fileExtension(program));
       if (program_ext == "bin") {

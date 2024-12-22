@@ -25,7 +25,7 @@ LLVM_CFLAGS += -Xclang -target-feature -Xclang +vortex -mllvm -vortex-branch-div
 #DP  = $(LLVM_VORTEX)/bin/llvm-objdump
 #CP  = $(LLVM_VORTEX)/bin/llvm-objcopy
 
-#  gcc编译器--使用的newlib的libc;    ar创建静态库；  objdump反汇编；  objcopy目标文件转换，elf -> bin;
+#  risc-v编译器--使用的newlib的libc;    ar创建静态库；  objdump反汇编；  objcopy目标文件转换，elf -> bin;
 CC  = $(RISCV_TOOLCHAIN_PATH)/bin/$(RISCV_PREFIX)-gcc
 AR  = $(RISCV_TOOLCHAIN_PATH)/bin/$(RISCV_PREFIX)-gcc-ar
 DP  = $(RISCV_TOOLCHAIN_PATH)/bin/$(RISCV_PREFIX)-objdump
