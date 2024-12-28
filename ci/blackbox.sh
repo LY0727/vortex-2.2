@@ -28,11 +28,12 @@ show_help()
     echo "--class: 0=disable, 1=pipeline, 2=memsys"
     echo "--rebuild: 0=disable, 1=force, 2=auto, 3=temp"
 }
-
+# root_dir 是 build/ci/.., 
+# script_dir 是 build/ci
 SCRIPT_DIR=$(dirname "$0")
 ROOT_DIR=$SCRIPT_DIR/..
 
-DRIVER=simx
+DRIVER=rtlsim
 APP=sgemm
 CLUSTERS=1
 CORES=1
@@ -40,15 +41,21 @@ WARPS=4
 THREADS=4
 L2=
 L3=
-DEBUG=0
+# 参数以DEBUG传入，传入数值实际为DEBUG_LEVEL
+DEBUG=1
 DEBUG_LEVEL=0
+# SCOPE=1时，CORES=1 这个要求要细看scope模式的实现
 SCOPE=0
+# 是否有参数；参数是 --args=xxx 传入的；保存在ARGS变量中
 HAS_ARGS=0
+# 性能监控类别
 PERF_CLASS=0
+# 控制是否重建的变量
 REBUILD=2
 TEMPBUILD=0
+# 日志文件名
 LOGFILE=run.log
-
+# 遍历参数
 for i in "$@"
 do
 case $i in
@@ -122,13 +129,13 @@ case $i in
         ;;
 esac
 done
-
+# 如果REBUILD=3，那么REBUILD=1，TEMPBUILD=1
 if [ $REBUILD -eq 3 ];
 then
     REBUILD=1
     TEMPBUILD=1
 fi
-
+# 设置driver路径;注意这个驱动为gpu的情况
 case $DRIVER in
     gpu)
         DRIVER_PATH=
@@ -150,7 +157,7 @@ case $DRIVER in
         exit -1
         ;;
 esac
-
+# 设置APP路径; 可以看到这里只支持opencl和regression两个文件夹
 if [ -d "$ROOT_DIR/tests/opencl/$APP" ];
 then
     APP_PATH=$ROOT_DIR/tests/opencl/$APP
@@ -161,7 +168,9 @@ else
     echo "Application folder not found: $APP"
     exit -1
 fi
-
+# drive为gpu时，直接运行APP; 其他情况下，需要先编译驱动，然后运行APP
+# 这其实就是我之前直接在APP目录下运行make run-rtlsim的情况
+# 如果有参数，在make时传递
 if [ "$DRIVER" = "gpu" ];
 then
     # running application
@@ -178,19 +187,22 @@ then
 
     exit $status
 fi
-
+# 这里的CONFIGS是一个特殊参数，是一个字符串，包含了所有的编译选项
+# -D开头的是编译选项，传递-D后面的字符作为一个宏定义；这里就是能将 $CLUSTERS 的值作为一个宏定义 NUM_CLUSTERS 的值 传递给编译器或构建工具；
+# 末尾的$CONFIGS 表示将此前可能定义了的 configs 选项保留下来； 也就是 累积配置 而不是 覆盖配置
 CONFIGS="-DNUM_CLUSTERS=$CLUSTERS -DNUM_CORES=$CORES -DNUM_WARPS=$WARPS -DNUM_THREADS=$THREADS $L2 $L3 $PERF_FLAG $CONFIGS"
 
 echo "CONFIGS=$CONFIGS"
 
+# rebuild 标志不等于0 ； 是否要重建驱动器，调用runtime/driver下的makefile,再调用到sim/driver/ 下的makefile
 if [ $REBUILD -ne 0 ]
 then
     BLACKBOX_CACHE=blackbox.$DRIVER.cache
     if [ -f "$BLACKBOX_CACHE" ]
     then
-        LAST_CONFIGS=`cat $BLACKBOX_CACHE`
+        LAST_CONFIGS=`cat $BLACKBOX_CACHE` # 读取上次的配置，赋值给LAST_CONFIGS变量
     fi
-
+    # 如果REBUILD=1 或者 配置发生了变化，那么清理驱动器; 将新的配置写入到缓存文件中，覆盖原有的配置
     if [ $REBUILD -eq 1 ] || [ "$CONFIGS+$DEBUG+$SCOPE" != "$LAST_CONFIGS" ];
     then
         make -C $DRIVER_PATH clean-driver > /dev/null
@@ -199,16 +211,19 @@ then
 fi
 
 # export performance monitor class identifier
+# runtime/stub 中有使用到这个环境变量
 export VORTEX_PROFILING=$PERF_CLASS
 
 status=0
 
-# ensure config update
+# ensure config update   体现为两个头文件重新生成，按照新的硬件配置
 make -C $ROOT_DIR/hw config > /dev/null
 
-# ensure the stub driver is present
+# ensure the stub driver is present  确保stub驱动器存在
 make -C $ROOT_DIR/runtime/stub > /dev/null
 
+# 这里是真正的运行部分,根据debug参数，输出日志或者不输出日志
+# debug 不等于0 
 if [ $DEBUG -ne 0 ]
 then
     # running application
@@ -265,11 +280,12 @@ then
             status=$?
         fi
     fi
-
+    # 如果有trace.vcd文件，移动到当前目录
     if [ -f "$APP_PATH/trace.vcd" ]
     then
         mv -f $APP_PATH/trace.vcd .
     fi
+# debug = 0; 不输出日志
 else
     if [ $TEMPBUILD -eq 1 ]
     then

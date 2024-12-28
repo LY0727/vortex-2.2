@@ -21,19 +21,18 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 `define NW_BITS         `CLOG2(`NUM_WARPS)
-`define NC_WIDTH        `UP(`NC_BITS)
-
-`define NT_BITS         `CLOG2(`NUM_THREADS)
 `define NW_WIDTH        `UP(`NW_BITS)
 
-`define NC_BITS         `CLOG2(`NUM_CORES)
+`define NT_BITS         `CLOG2(`NUM_THREADS)
 `define NT_WIDTH        `UP(`NT_BITS)
+
+`define NC_BITS         `CLOG2(`NUM_CORES)
+`define NC_WIDTH        `UP(`NC_BITS)
 
 `define NB_BITS         `CLOG2(`NUM_BARRIERS)
 `define NB_WIDTH        `UP(`NB_BITS)
 
 `define NUM_IREGS       32
-
 `define NRI_BITS        `CLOG2(`NUM_IREGS)
 
 `ifdef EXT_F_ENABLE

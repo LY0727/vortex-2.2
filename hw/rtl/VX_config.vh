@@ -14,6 +14,9 @@
 `ifndef VX_CONFIG_VH
 `define VX_CONFIG_VH
 
+/*===================================================
+1. 宏工具函数
+====================================================*/
 `ifndef MIN
 `define MIN(x, y)   (((x) < (y)) ? (x) : (y))
 `endif
@@ -21,17 +24,22 @@
 `ifndef MAX
 `define MAX(x, y)   (((x) > (y)) ? (x) : (y))
 `endif
-
+// 限定x上下限： [ lo, hi ]
 `ifndef CLAMP
 `define CLAMP(x, lo, hi)   (((x) > (hi)) ? (hi) : (((x) < (lo)) ? (lo) : (x)))
 `endif
-
+// 避免0值
 `ifndef UP
 `define UP(x)   (((x) != 0) ? (x) : 1)
 `endif
 
-///////////////////////////////////////////////////////////////////////////////
 
+/*===================================================
+2. 硬件架构配置 
+    M F D ZICOND 四种扩展的启动和禁用
+    默认系统位宽
+    默认浮点数位宽，浮点数还涉及到硬件参数配置
+====================================================*/
 `ifndef EXT_M_DISABLE
 `define EXT_M_ENABLE
 `endif
@@ -51,7 +59,7 @@
 `ifndef EXT_ZICOND_DISABLE
 `define EXT_ZICOND_ENABLE
 `endif
-
+// 默认32位
 `ifndef XLEN_32
 `ifndef XLEN_64
 `define XLEN_32
@@ -85,7 +93,9 @@
     `define FPU_RV64F
 `endif
 `endif
-
+/*===================================================
+3. 硬件参数配置
+====================================================*/
 `ifndef NUM_CLUSTERS
 `define NUM_CLUSTERS 1
 `endif
@@ -101,11 +111,11 @@
 `ifndef NUM_THREADS
 `define NUM_THREADS 4
 `endif
-
+    // barrier 为什么是warps的一半；看schedule.sv
 `ifndef NUM_BARRIERS
 `define NUM_BARRIERS `UP(`NUM_WARPS/2)
 `endif
-
+    // spcket 为 4个cores
 `ifndef SOCKET_SIZE
 `define SOCKET_SIZE `MIN(4, `NUM_CORES)
 `endif
@@ -126,11 +136,11 @@
     `define ICACHE_DISABLE
     `define DCACHE_DISABLE
 `endif
-
+    // 内存块大小
 `ifndef MEM_BLOCK_SIZE
 `define MEM_BLOCK_SIZE 64
 `endif
-
+    // 内存地址宽度
 `ifndef MEM_ADDR_WIDTH
 `ifdef XLEN_64
 `define MEM_ADDR_WIDTH 48
@@ -138,7 +148,7 @@
 `define MEM_ADDR_WIDTH 32
 `endif
 `endif
-
+    // L1 L2 L3 cache的行大小
 `ifndef L1_LINE_SIZE
 `define L1_LINE_SIZE `MEM_BLOCK_SIZE
 `endif
@@ -151,6 +161,13 @@
 `define L3_LINE_SIZE `MEM_BLOCK_SIZE
 `endif
 
+/*===================================================
+4. 地址配置，各基地址和大小
+    堆栈
+    起始地址
+    用户地址
+    IO地址
+====================================================*/
 `ifdef XLEN_64
 
 `ifndef STACK_BASE_ADDR
@@ -189,6 +206,7 @@
 
 `endif
 
+
 `define IO_END_ADDR     `USER_BASE_ADDR
 
 `ifndef LMEM_LOG_SIZE
@@ -213,13 +231,23 @@
 `define STACK_LOG2_SIZE 13
 `endif
 `define STACK_SIZE      (1 << `STACK_LOG2_SIZE)
-
+    // 复位延时
 `define RESET_DELAY 8
-
+    // 访存等待超时
 `ifndef STALL_TIMEOUT
 `define STALL_TIMEOUT   (100000 * (1 ** (`L2_ENABLED + `L3_ENABLED)))
 `endif
 
+/*===================================================
+5. DPI、FPU、SYNTHESIS、DEBUG等配置   这都是仿真需要的
+    DPI_DISABLE
+    FPU_FPNEW
+    FPU_DSP
+    FPU_DPI
+    IMUL_DPI
+    IDIV_DPI
+    DEBUG_LEVEL
+====================================================*/
 `ifndef SV_DPI
 `define DPI_DISABLE
 `endif
@@ -252,13 +280,22 @@
 `endif
 
 // Pipeline Configuration /////////////////////////////////////////////////////
-
-// Issue width
+/*===================================================
+6. 流水线配置，
+    发射宽度
+    ALU、FPU、LSU、SFU的配置
+    指令缓冲区大小
+    LSU的配置
+    FPU的配置
+    Icache、Dcache、L2cache、L3cache、LMEM的配置
+    ISA扩展
+====================================================*/
+// Issue width  发射宽度是指可以同时执行的warp数,这样执行单元也要加
 `ifndef ISSUE_WIDTH
 `define ISSUE_WIDTH     `UP(`NUM_WARPS / 8)
 `endif
 
-// Number of ALU units
+// Number of ALU units   
 `ifndef NUM_ALU_LANES
 `define NUM_ALU_LANES   `NUM_THREADS
 `endif
@@ -274,7 +311,7 @@
 `define NUM_FPU_BLOCKS  `ISSUE_WIDTH
 `endif
 
-// Number of LSU units
+// Number of LSU units  这个为什么要等于线程数
 `ifndef NUM_LSU_LANES
 `define NUM_LSU_LANES   `NUM_THREADS
 `endif
@@ -295,7 +332,7 @@
 `define IBUF_SIZE   4
 `endif
 
-// LSU line size
+// LSU line size    line数 * 每指令字节数 * cache行大小（64words）
 `ifndef LSU_LINE_SIZE
 `define LSU_LINE_SIZE   `MIN(`NUM_LSU_LANES * (`XLEN / 8), `L1_LINE_SIZE)
 `endif
@@ -451,7 +488,7 @@
 `define NUM_ICACHES `UP(`SOCKET_SIZE / 4)
 `endif
 
-// Cache Size
+// Cache Size   16KB
 `ifndef ICACHE_SIZE
 `define ICACHE_SIZE 16384
 `endif
@@ -495,12 +532,12 @@
     `define DCACHE_NUM_BANKS 1
 `endif
 
-// Number of Cache Units
+// Number of Cache Units   意思就是4个core共享一个cache
 `ifndef NUM_DCACHES
 `define NUM_DCACHES `UP(`SOCKET_SIZE / 4)
 `endif
 
-// Cache Size
+// Cache Size  16KB
 `ifndef DCACHE_SIZE
 `define DCACHE_SIZE 16384
 `endif
@@ -687,7 +724,7 @@
 `else
     `define EXT_ZICOND_ENABLED 0
 `endif
-
+// 给运行时使用的
 `define ISA_STD_A           0
 `define ISA_STD_C           2
 `define ISA_STD_D           3
@@ -707,6 +744,7 @@
 `define ISA_EXT_LMEM        4
 `define ISA_EXT_ZICOND      5
 
+// MISA寄存器是RISCV架构中，用于指示处理器支持的指令集扩展 和 功能扩展 情况 的寄存器。
 `define MISA_EXT  (`ICACHE_ENABLED  << `ISA_EXT_ICACHE) \
                 | (`DCACHE_ENABLED  << `ISA_EXT_DCACHE) \
                 | (`L2_ENABLED      << `ISA_EXT_L2CACHE) \

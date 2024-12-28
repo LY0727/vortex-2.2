@@ -26,7 +26,7 @@
 `define VX_DCR_BASE_STARTUP_ARG1        12'h004
 `define VX_DCR_BASE_MPM_CLASS           12'h005
 `define VX_DCR_BASE_STATE_END           12'h006
-
+    // 这两个只在 simx 中使用
 `define VX_DCR_BASE_STATE(addr)         ((addr) - `VX_DCR_BASE_STATE_BEGIN)
 `define VX_DCR_BASE_STATE_COUNT         (`VX_DCR_BASE_STATE_END-`VX_DCR_BASE_STATE_BEGIN)
 

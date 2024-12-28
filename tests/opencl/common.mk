@@ -143,7 +143,7 @@ run-simx: $(PROJECT) $(KERNEL_SRCS)
 	LD_LIBRARY_PATH=$(POCL_PATH)/lib:$(ROOT_DIR)/runtime:$(LLVM_VORTEX)/lib:$(LD_LIBRARY_PATH) $(POCL_CC_FLAGS) VORTEX_DRIVER=simx ./$(PROJECT) $(OPTS)
 
 # 执行可执行文件， 执行过程中进行动态链接。
-# 1.  LD_LIBRARY_PATH：指定动态链接库搜索路径： pocl/lib:  build/runtime:   llvm-vortex/lib:
+# 1.  LD_LIBRARY_PATH：指定动态链接库搜索路径： pocl/lib:  build/runtime:   llvm-vortex/lib:  
 # 2.  POCL_CC_FLAGS：指定编译器参数；  
 #		2.1  POCL_VORTEX_XLEN=64：指定ISA子集；
 #		2.2  POCL_DEBUG=all：指定调试模式；
@@ -151,7 +151,8 @@ run-simx: $(PROJECT) $(KERNEL_SRCS)
 #		2.4  POCL_VORTEX_BINTOOL="$(VX_BINTOOL)"：指定二进制工具；
 #		2.5  POCL_VORTEX_CFLAGS="$(VX_CFLAGS)"：  指定编译器参数；
 #		2.6  POCL_VORTEX_LDFLAGS="$(VX_LDFLAGS)"：指定链接器参数；  kernel/libvortex.a; libc 和 libclang_rt.builtins-riscv64.a ；
-# 3.  VORTEX_DRIVER：指定驱动器类型；  这里是rtlsim；  这个宏定义在 runtime/rtlsim/vortex.cpp 中有用到；
+# 3.  VORTEX_DRIVER：指定驱动器类型；  这里是rtlsim；  这个宏定义在 runtime/rtlsim/vortex.cpp 中有用到；    
+#        麻了,但是编译链接都没有提及runtime/rtlsim/vortex.cpp 和 库文件runtime/libvortex-rtlsim.so
 # 4.  ./$(PROJECT) $(OPTS)：执行可执行文件，传入参数
 run-rtlsim: $(PROJECT) $(KERNEL_SRCS)
 	LD_LIBRARY_PATH=$(POCL_PATH)/lib:$(ROOT_DIR)/runtime:$(LLVM_VORTEX)/lib:$(LD_LIBRARY_PATH) $(POCL_CC_FLAGS) VORTEX_DRIVER=rtlsim ./$(PROJECT) $(OPTS)

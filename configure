@@ -171,4 +171,6 @@ SCRIPT_DIR="$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
 
 THIRD_PARTY_DIR=$SCRIPT_DIR/third_party
 
+
+# 调用copy_files函数，将文件拷贝到当前目录
 copy_files "$SCRIPT_DIR" "$CURRENT_DIR"
