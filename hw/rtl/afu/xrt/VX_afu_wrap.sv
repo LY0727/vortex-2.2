@@ -12,7 +12,68 @@
 // limitations under the License.
 
 `include "vortex_afu.vh"
+/*=============================================================================
+**三个模块：**
+	1. afu_ctrl模块： afu_ctrl模块负责配置vortex的app，包括app的参数配置，app的启动和停止；
+	2. vortex模块：   vortex模块负责执行app的计算任务；
+	3. afu_warp：    本模块是组合了afu_ctrl模块和vortex模块的对外顶层；
+		1.总线接口转发： 对外mem接口--AXI master->vortex；对外dcr接口--axi-lite-slave -> afu_ctrl ->vortex；
+		2.关键状态机: 完成下述控制与状态信息的转发：
+			afu_ctrl控制信息：      ap_start, ap_reset, ap_done, ap_idle
+			vortex模块状态信息反馈： busy
+==============================================================================*/
+/*=============================================================================
+**梳理AFU的关键控制信号：**
+	复位信号：
+    1. 系统低电平复位信号 ap_rst_n ； 与系统复位同步
+		2. AFU内部复位信号 reset ；      用于vortex 、 afu_ctrl等模块
+		3. afu_ctrl 复位信号：           reset || ap_reset
+		4. vortex  复位信号：            set || ap_reset || ~vx_running
+		5. AFU状态机复位信号：		      reset || ap_reset
+	vortex关键信号：
+		1. vx_busy ： 反应vortex硬件是否在实际执行中
+	afu关键信号：
+		1. ap_start ：
+				host通过axi-lite写AFU ctrl reg；生成该信号。AFU开始一轮状态机执行一次APP
+				一次APP执行完成后，生成ap_reset 将该信号复位。
+				下次APP执行前，再次写入ap_start信号，开始下一轮APP执行。
+		2. ap_reset ：
+				host 写 afu_ctrl 生成，将 afu_ctrl 和 vortex 都进行复位。
+		3. ap_done  ： afu_ctrl发出的执行完成信号
+		4. ap_idle  ： afu_ctrl发出的空闲状态信号
+		5. ap_ready ： afu_warp 发给 afu_ctrl,  设置为1，表示afu_ctrl可以工作，恒大设置1
 
+    6. interrupt： 实际发送给 host
+
+**梳理整个AFU的工作流程：**
+	1. host通过axi-lite
+		1. 写afu寄存器： 配置设备信息、ISA信息、外部mem基地址等；
+		2. 写afu寄存器： 配置中断信息；  中断reg每次复位都会清零，每次APP都要配置
+		3. 写DCR reg：  生成dcr_wr_valid信号。进而配置vortex硬件
+		4. 写AFU ctrl reg： 可写ap_start、ap_reset、auto_restart三个信号 生成ap_start信号。AFU开始一轮状态机执行一次APP
+		5. 读：上面信息都可以读；
+	2. 一次APP执行过程：
+		1. host 配置中断信息；写DCR reg 配置vortex硬件；
+		2. host 写AFU ctrl reg，生成ap_start = 1； reset || ap_reset = 0；
+		3. AFU执行；
+    1. 进入STATE_RUN状态（ap_idle）； vortex硬件的延迟复位过程，vx_running=0； ap_idle=1；体现这个状态
+			2. vx_busy_wait状态；   vortex完成复位后，vx_busy 0->1的过程；
+			3. vortex 执行中状态；   vx_busy 1->0的过程；
+			4. vortex 执行完成；    标志是vx_busy=0   AFU的状态机进入 STATE_IDLE 状态
+		4. ap_done = 1；  条件：state == STATE_IDLE，vx_pending_writes ==0； 执行完成，且写缓冲区里的数据也都真正写完了
+			1. 会生成 ap完成中断信号 interrupt = 1；  通知host
+			2. 注意本实现没有做 ap_ready的逻辑
+			3. ap_idle =1；  等待下一轮APP执行；
+    4. vortex硬件会进入复位状态。**
+    最重要的一点：
+		硬件不会自动将ap_restart信号清0，也不会自动生成ap_reset信号; 中断操作中如果不直接清0，或进行复位，那么AFU硬件会马上开始下一轮APP执行。**
+
+    5.中断程序中： 猜想怎么做？    至少还有一个要把 生成 ap_reset信号，或者先把 ap_start信号置0
+			1. host读中断信息； 读中断reg，清除中断信息；
+			2. host读DCR reg； 读vortex硬件的状态信息；
+			3. host读AFU ctrl reg； 读AFU的状态信息；
+			4. host读AFU的执行结果； 读外部mem的数据；
+==============================================================================*/
 module VX_afu_wrap #(
 	  parameter C_S_AXI_CTRL_ADDR_WIDTH = 8,
 	  parameter C_S_AXI_CTRL_DATA_WIDTH	= 32,
@@ -53,6 +114,10 @@ module VX_afu_wrap #(
 	localparam STATE_IDLE = 0;
     localparam STATE_RUN  = 1;
 
+/*=============================================================================
+	vortex的mem访存通道 -> vortex_axi封装为AXI master接口 -> afu_ctrl模块中配置好外部mem在整个总线系统中的mem_base基地址
+	 -> afu_warp模块中将vortex的访存地址转换为面向总线系统上的 访存地址；
+==============================================================================*/
 	wire                                 m_axi_mem_awvalid_a [C_M_AXI_MEM_NUM_BANKS];
     wire                                 m_axi_mem_awready_a [C_M_AXI_MEM_NUM_BANKS];
     wire [C_M_AXI_MEM_ADDR_WIDTH-1:0]    m_axi_mem_awaddr_a [C_M_AXI_MEM_NUM_BANKS];
@@ -81,23 +146,29 @@ module VX_afu_wrap #(
 
 	// convert memory interface to array
 	`REPEAT (`M_AXI_MEM_NUM_BANKS, AXI_MEM_TO_ARRAY, REPEAT_SEMICOLON);
-
+	
 	wire reset = ~ap_rst_n;
+
+	reg state;
 
 	reg [`CLOG2(`RESET_DELAY+1)-1:0] vx_reset_ctr;
 	reg [15:0] vx_pending_writes;
 	reg vx_busy_wait;
 	reg vx_running;
-
+/*=============================================================================
+	vortex的状态信号
+==============================================================================*/
 	wire vx_busy;
-
+/*=============================================================================
+	afu_ctrl模块中的  控制和 状态变量
+==============================================================================*/
 	wire [63:0] mem_base [C_M_AXI_MEM_NUM_BANKS];
 
 	wire                          dcr_wr_valid;
 	wire [`VX_DCR_ADDR_WIDTH-1:0] dcr_wr_addr;
 	wire [`VX_DCR_DATA_WIDTH-1:0] dcr_wr_data;
 
-	reg state;
+
 
 	wire ap_reset;
 	wire ap_start;
@@ -111,6 +182,9 @@ module VX_afu_wrap #(
   	wire scope_reset = reset;
 `endif
 
+/*=============================================================================
+	AFU控制状态机；  一个 app的执行过程，就是一个状态机的执行过程；
+==============================================================================*/
 	always @(posedge ap_clk) begin
 		if (reset || ap_reset) begin
 			state <= STATE_IDLE;
@@ -158,7 +232,21 @@ module VX_afu_wrap #(
 			endcase
 		end
 	end
-
+/*=============================================================================
+	AFU 结束复位后，发出ap_start有效信号后； 
+	vortex硬件还有一个延迟复位过程，延迟周期数在`RESET_DELAY中定义；计数器控制复位
+==============================================================================*/
+	always @(posedge ap_clk) begin
+		if (state == STATE_RUN) begin
+			vx_reset_ctr <= vx_reset_ctr + 1;
+		end else begin
+			vx_reset_ctr <= '0;
+		end
+	end
+/*=============================================================================
+	vortex写外部mem，有一个乒乓缓冲区；vx_pending_writes记录缓冲区中的写操作数；
+	每次写操作完成后，vx_pending_writes减1；每次写操作开始后，vx_pending_writes加1；
+==============================================================================*/
 	reg m_axi_mem_wfire;
 	reg m_axi_mem_bfire;
 
@@ -182,13 +270,7 @@ module VX_afu_wrap #(
 		end
 	end
 
-	always @(posedge ap_clk) begin
-		if (state == STATE_RUN) begin
-			vx_reset_ctr <= vx_reset_ctr + 1;
-		end else begin
-			vx_reset_ctr <= '0;
-		end
-	end
+
 
 	VX_afu_ctrl #(
 		.AXI_ADDR_WIDTH (C_S_AXI_CTRL_ADDR_WIDTH),
@@ -236,6 +318,13 @@ module VX_afu_wrap #(
 		.dcr_wr_data	(dcr_wr_data)
 	);
 
+/*=============================================================================
+**三个地址：**
+	1. mem_base：   afu_ctrl模块中，配置的mem_base地址；表示的是外部mem在整个总线系统中分配的基地址；如果有多个外部mem,每个都有一个mem_base地址；
+	2. m_axi_mem_awaddr_w：   vortex模块对外的访存地址；
+	3. m_axi_mem_awaddr_a：   整个AFU_device 对外的mem访存地址；mem_base + m_axi_mem_awaddr_w； 这个地址也是传递到系统的总线系统中去，而不是直接传递给 mem本身
+==============================================================================*/
+
 	wire [`MEM_ADDR_WIDTH-1:0] m_axi_mem_awaddr_w [C_M_AXI_MEM_NUM_BANKS];
 	wire [`MEM_ADDR_WIDTH-1:0] m_axi_mem_araddr_w [C_M_AXI_MEM_NUM_BANKS];
 
@@ -248,14 +337,14 @@ module VX_afu_wrap #(
 
 	Vortex_axi #(
 		.AXI_DATA_WIDTH (C_M_AXI_MEM_DATA_WIDTH),
-		.AXI_ADDR_WIDTH (`MEM_ADDR_WIDTH),
+		.AXI_ADDR_WIDTH (`MEM_ADDR_WIDTH),		// 64位系统是 48bits; 32位系统是 32bits
 		.AXI_TID_WIDTH  (C_M_AXI_MEM_ID_WIDTH),
 		.AXI_NUM_BANKS  (C_M_AXI_MEM_NUM_BANKS)
 	) vortex_axi (
 		`SCOPE_IO_BIND  (1)
 
 		.clk			(ap_clk),
-		.reset			(reset || ap_reset || ~vx_running),
+		.reset			(reset || ap_reset || ~vx_running),  // 重要的复位信号
 
 		.m_axi_awvalid	(m_axi_mem_awvalid_a),
 		.m_axi_awready	(m_axi_mem_awready_a),
