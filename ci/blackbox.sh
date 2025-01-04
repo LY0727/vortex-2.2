@@ -13,6 +13,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+# ./ci/blackbox.sh --driver=xrt --app=conv3 --args=-n4  --debug=1 --log=run.log
+
 show_usage()
 {
     echo "Vortex BlackBox Test Driver v1.0"
@@ -34,7 +36,7 @@ SCRIPT_DIR=$(dirname "$0")
 ROOT_DIR=$SCRIPT_DIR/..
 
 DRIVER=rtlsim
-APP=sgemm
+APP=conv3
 CLUSTERS=1
 CORES=1
 WARPS=4
@@ -43,7 +45,7 @@ L2=
 L3=
 # 参数以DEBUG传入，传入数值实际为DEBUG_LEVEL
 DEBUG=1
-DEBUG_LEVEL=0
+DEBUG_LEVEL=1
 # SCOPE=1时，CORES=1 这个要求要细看scope模式的实现
 SCOPE=0
 # 是否有参数；参数是 --args=xxx 传入的；保存在ARGS变量中
