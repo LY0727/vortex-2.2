@@ -185,15 +185,14 @@
 `define VX_CSR_MHARTID                  12'hF14
 
 // GPGU CSRs
-
-`define VX_CSR_THREAD_ID                12'hCC0
-`define VX_CSR_WARP_ID                  12'hCC1
-`define VX_CSR_CORE_ID                  12'hCC2
-`define VX_CSR_ACTIVE_WARPS             12'hCC3
-`define VX_CSR_ACTIVE_THREADS           12'hCC4     // warning! this value is also used in LLVM
-
-`define VX_CSR_NUM_THREADS              12'hFC0
-`define VX_CSR_NUM_WARPS                12'hFC1
+// 在 vx_intrinsics.h 中，读取这些 CSR 的操作，被封装成了函数：
+`define VX_CSR_THREAD_ID                12'hCC0  // 当前线程 ID (0..N-1)
+`define VX_CSR_WARP_ID                  12'hCC1  // 当前 Warp ID
+`define VX_CSR_CORE_ID                  12'hCC2  // 当前 Core ID
+`define VX_CSR_ACTIVE_WARPS             12'hCC3  // 当前活跃的 Warp 掩码
+`define VX_CSR_ACTIVE_THREADS           12'hCC4  // 当前活跃的 Thread 掩码    
+`define VX_CSR_NUM_THREADS              12'hFC0  // 硬件支持的最大线程数
+`define VX_CSR_NUM_WARPS                12'hFC1  // 硬件支持的最大 Warp 数
 `define VX_CSR_NUM_CORES                12'hFC2
 `define VX_CSR_LOCAL_MEM_BASE           12'hFC3
 

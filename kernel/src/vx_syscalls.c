@@ -34,11 +34,30 @@ int _open(const char *name, int flags, int mode) { return -1; }
 
 int _read(int file, char *ptr, int len) { return -1; }
 
+/*************************************************************
+  * sbrk 实现说明
+  *
+  * 背景：newlib C 库使用 _sbrk 系统调用来实现动态内存分配 (malloc)。
+  *      _sbrk 函数负责调整程序的数据段末尾，以分配或释放内存。
+  * 需求：在嵌入式系统或特殊架构（如 Vortex）中，通常需要自定义 _sbrk 的行为以适应特定的内存管理需求。
+  * 实现：这里的 _sbrk 实现直接触发了一个 ebreak 异常，表示当前不支持动态内存分配。 
+          因为在GPU架构下，通常也不鼓励动态分配内存，而是HOST端统一管理内存分配。
+  *************************************************************/
+
 caddr_t _sbrk(int incr) {
   __asm__ __volatile__("ebreak");
   return 0;
 }
-
+/*************************************************************
+  * _write 实现说明
+  *
+  * 背景：newlib C 库使用 _write 系统调用来实现 标准输出功能 (printf)。
+  *      _write 函数负责将数据写入指定的文件描述符（通常是标准输出）。
+  * 需求：在嵌入式系统或特殊架构（如 Vortex）中，通常需要自定义 _write 的行为以适应特定的输出设备。
+  * 实现：这里的 _write 实现将数据逐字节发送到 Vortex 的字符输出函数 vx_putchar。
+          注意这里的实现忽略了 file 参数，假设所有输出都发送到同一个输出设备（通常是 UART 或控制台）。
+  * 注意：vx_putchar 函数定义在 vx_print 模块中，负责实际的字符输出。
+  *************************************************************/
 int _write(int file, char *ptr, int len) {
   int i;
   for (i = 0; i < len; ++i) {
@@ -52,15 +71,28 @@ int _kill(int pid, int sig) { return -1; }
 int _getpid() {
   return vx_hart_id();
 }
+/*************************************************************
+  * TLS 初始化说明
+  *
+  * 背景：线程局部存储 (TLS) 允许每个线程拥有自己的数据副本。
+  *      在多线程环境中，TLS 用于存储线程特有的数据，确保线程之间的数据隔离。
+  * 需求：在支持多线程的系统中，必须正确初始化 TLS 以确保每个线程的数据独立性。 
+  * 实现：__init_tls 函数负责初始化 TLS data段和 BSS 段。
+          它从链接器提供的符号获取 TLS 数据的起始位置和大小，
+          并使用 memcpy 和 memset 分别初始化数据段和 BSS 段。
+  *************************************************************/
 
 void __init_tls(void) {
+  // These magic symbols are provided by the linker. 链接脚本中提供的符号。
   extern char __tdata_start[];
   extern char __tbss_offset[];
   extern char __tdata_size[];
   extern char __tbss_size[];
 
   // TLS memory initialization
+  // 1. 获取当前线程的tp指针。 把 C 变量绑定到了物理寄存器 tp 上。这是 GCC 的扩展语法。
   register char *__thread_self __asm__ ("tp");
+  // 2. 初始化 TLS data 段（拷贝）和 BSS 段（清零）。
   memcpy(__thread_self, __tdata_start, (size_t)__tdata_size);
   memset(__thread_self + (size_t)__tbss_offset, 0, (size_t)__tbss_size);
 }

@@ -3,13 +3,70 @@
    Copying and distribution of this script, with or without modification,
    are permitted in any medium without royalty provided the copyright
    notice and this notice are preserved.  */
+
+
+/*********************************************************************
+OUTPUT_ARCH(riscv)
+ENTRY(_start)  /* 指定程序的入口点是 _start 符号 
+SECTIONS
+{
+  . = STARTUP_ADDR; /* 设置起始地址，通常是 0x80000000 或类似值 
+  
+  /* 代码段 
+  .text : { ... }
+  
+  /* 数据段 
+  .data : { ... }
+  
+  /* BSS 段 (未初始化的全局变量) 
+  .bss : { ... }
+  
+  /* 堆栈和 TLS 的关键符号
+  _end = .; PROVIDE (end = .); /* 堆(Heap)的起始地址通常紧跟在 BSS 后面 
+  
+  /* 线程局部存储 (TLS) 相关段 
+  .tdata : { ... }
+  .tbss : { ... }
+}
+
+ENTRY(_start)： 告诉链接器，程序的第一条指令在 _start 标签处。
+_end：          这是程序使用的内存的末尾。通常，堆（Heap）从这里开始向上增长。
+.tdata / .tbss：这是 Thread Local Storage (TLS) 的数据段。
+                因为 Vortex 是多线程架构，每个线程都需要一份私有的全局变量副本（比如 errno），
+                这些数据就放在这里。
+*********************************************************************/
+/*********************************************************************
+与标准 RISC-V 链接脚本的异同：
+
+相同点：
+  段结构：.text, .data, .bss, .rodata 等标准段的定义完全一致。
+  符号处理：__global_pointer, _end 等符号的生成方式也是标准的。
+  TLS 支持：标准的 RISC-V 工具链本身就支持 TLS，所以 .tdata 和 .tbss 的定义也是标准的。
+
+不同点 (Vortex 特有的微调)：
+
+  1. 起始地址 (STARTUP_ADDR)：
+        标准的脚本通常会写死一个地址（如 0x10000 或 0x80000000）。Vortex 这里用了一个变量 STARTUP_ADDR，这允许在编译时通过命令行参数（-Wl,--defsym=STARTUP_ADDR=0x80000000）灵活改变程序的加载地址。这对于在不同的 FPGA 平台或仿真环境中运行非常重要。
+
+  2. 栈和堆的隐式处理：
+        注意看脚本里没有显式定义栈（Stack）段。
+        标准裸机程序：通常会在链接脚本里定义一个 _stack_top 符号，并在启动代码里把 sp 指向那里。
+        Vortex：在 vx_start.S 里我们看到，栈的位置是动态计算的：
+        这意味着 Vortex 的栈空间管理逻辑是硬编码在启动汇编里的，而不是由链接脚本静态分配的。这是为了支持 SIMT 多线程（每个线程都需要一个栈），链接脚本很难静态表达“N 个栈”的概念。
+  3. TLS 的动态初始化：
+        虽然脚本里定义了 TLS 段，但如何使用这些段是 Vortex 特有的。
+        标准 Linux 程序：操作系统内核负责在创建线程时分配 TLS 块。
+        Vortex 裸机：vx_start.S 必须手动根据链接脚本提供的 __tdata_start, __tdata_size 等符号，把数据拷贝到每个 Warp 的 tp 指针指向的内存区域。
+*********************************************************************/
+
+
 OUTPUT_FORMAT("elf32-littleriscv", "elf32-littleriscv",
 	      "elf32-littleriscv")
 OUTPUT_ARCH(riscv)
-ENTRY(_start)
+ENTRY(_start)          /* 指定程序的入口点是 _start 符号 */
 SECTIONS
 {
-  . = STARTUP_ADDR;
+  . = STARTUP_ADDR;   /* 设置起始地址，config.h , 通常是 0x80000000 或类似值 */
   /DISCARD/ : {
     *(.interp)
     *(.dynsym)

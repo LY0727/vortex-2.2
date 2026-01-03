@@ -14,6 +14,9 @@
 5. 运行测试
    `build目录下：./ci/blackbox.sh --driver=opae --app=conv3 --args=-n4`
 
+# RESTART-1228
+
+
 # 多写关键注释，带姓名前缀
 
 # 注意git合并，如果不熟就不push
