@@ -53,10 +53,10 @@ int vx_spawn_threads(uint32_t dimension,
                      const uint32_t* grid_dim,
                      const uint32_t* block_dim,
                      vx_kernel_func_cb kernel_func,
-                     const void* arg);
+                     const void* arg); 
 
 // function call serialization
-void vx_serial(vx_serial_cb callback, const void * arg);
+void  (vx_serial_cb callback, const void * arg);
 
 #ifdef __cplusplus
 }

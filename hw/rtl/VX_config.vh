@@ -115,7 +115,7 @@
 `ifndef NUM_BARRIERS
 `define NUM_BARRIERS `UP(`NUM_WARPS/2)
 `endif
-    // spcket 为 4个cores
+    // spcket_size 最大为4，如果core数小于4，则等于core数
 `ifndef SOCKET_SIZE
 `define SOCKET_SIZE `MIN(4, `NUM_CORES)
 `endif
@@ -162,12 +162,11 @@
 `endif
 
 /*===================================================
-4. 地址配置，各基地址和大小
-    堆栈
-    起始地址
-    用户地址
-    IO地址
+4.  地址配置，各基地址和大小; 看看linker script 和 vx_start.s
+    通过kernel/目录下面的学习，可以理解这些地址的作用。
 ====================================================*/
+
+// 注意：64位模式下，地址是48位有效
 `ifdef XLEN_64
 
 `ifndef STACK_BASE_ADDR
@@ -185,7 +184,7 @@
 `ifndef IO_BASE_ADDR
 `define IO_BASE_ADDR    64'h000000040
 `endif
-
+// 注意：32位模式下，地址是32位有效
 `else
 
 `ifndef STACK_BASE_ADDR
@@ -206,9 +205,13 @@
 
 `endif
 
-
+// IO地址结束位置
 `define IO_END_ADDR     `USER_BASE_ADDR
 
+// LMEM地址配置,看vx_start.s可以理解。
+// 作用：用于存放大数据量的全局变量，是core层级共享的。（显然，也就可以实现block内共享）
+// 位置：从STACK_BASE_ADDR开始向上分配，16KB。   
+// 物理：理想情况下，应该使用高速片上SRAM。但显然映射到全局内存也是可以的，就是期望的性能会差一些。
 `ifndef LMEM_LOG_SIZE
 `define LMEM_LOG_SIZE   14
 `endif
@@ -217,16 +220,20 @@
 `define LMEM_BASE_ADDR  `STACK_BASE_ADDR
 `endif
 
+// 字符输出设备，可见 vx_print.s 中对0x40地址的使用。
+// IO_COUT_SIZE 64字节，足够存放字符串了。
 `ifndef IO_COUT_ADDR
 `define IO_COUT_ADDR    `IO_BASE_ADDR
 `endif
 `define IO_COUT_SIZE    64
-
+// 内存映射性能计数器：  每个core 8个32位寄存器，依次分配计数器地址空间。
 `ifndef IO_MPM_ADDR
 `define IO_MPM_ADDR     (`IO_COUT_ADDR + `IO_COUT_SIZE)
 `endif
 `define IO_MPM_SIZE     (8 * 32 * `NUM_CORES * `NUM_CLUSTERS)
 
+// 栈大小 8KB,看vx_start.s可以理解。
+// 每个thread硬件都分配一个栈空间，从STACK_BASE_ADDR开始向下生成。  
 `ifndef STACK_LOG2_SIZE
 `define STACK_LOG2_SIZE 13
 `endif
@@ -311,7 +318,8 @@
 `define NUM_FPU_BLOCKS  `ISSUE_WIDTH
 `endif
 
-// Number of LSU units  这个为什么要等于线程数
+// Number of LSU units  
+// LSU处理访存，必然是串行执行的，所以只设置一个block
 `ifndef NUM_LSU_LANES
 `define NUM_LSU_LANES   `NUM_THREADS
 `endif
@@ -320,6 +328,7 @@
 `endif
 
 // Number of SFU units
+// SFU处理warp层级操作，所以也只设置一个block
 `ifndef NUM_SFU_LANES
 `define NUM_SFU_LANES   `NUM_THREADS
 `endif
@@ -483,14 +492,14 @@
     `define NUM_ICACHES 0
 `endif
 
-// Number of Cache Units
+// Number of Cache Units  按照这里的定义，NUM_ICACHES 一定为 1。每个socket一个icache
 `ifndef NUM_ICACHES
 `define NUM_ICACHES `UP(`SOCKET_SIZE / 4)
 `endif
 
 // Cache Size   16KB
 `ifndef ICACHE_SIZE
-`define ICACHE_SIZE 16384
+`define ICACHE_SIZE 4096 // 16384
 `endif
 
 // Core Response Queue Size
@@ -532,14 +541,14 @@
     `define DCACHE_NUM_BANKS 1
 `endif
 
-// Number of Cache Units   意思就是4个core共享一个cache
+// Number of Cache Units   按照这里的定义，NUM_DCACHES 一定为 1。每个socket一个dcache
 `ifndef NUM_DCACHES
 `define NUM_DCACHES `UP(`SOCKET_SIZE / 4)
 `endif
 
 // Cache Size  16KB
 `ifndef DCACHE_SIZE
-`define DCACHE_SIZE 16384
+`define DCACHE_SIZE 4096 // 16384
 `endif
 
 // Number of Banks

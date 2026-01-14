@@ -154,10 +154,10 @@ static void __attribute__ ((noinline)) process_thread_groups_stub() {
   vx_tmc(0 == vx_warp_id());
 }
 
-int vx_spawn_threads(uint32_t dimension,
-                     const uint32_t* grid_dim,
-                     const uint32_t * block_dim,
-                     vx_kernel_func_cb kernel_func,
+int vx_spawn_threads(uint32_t dimension,           // 任务空间维度
+                     const uint32_t* grid_dim,     // Grid空间
+                     const uint32_t * block_dim,   // Block空间
+                     vx_kernel_func_cb kernel_func,// 内核入口函数指针，arg以结构体指针想内核函数传递参数
                      const void* arg) {
   // calculate number of groups and group size
   uint32_t num_groups = 1;

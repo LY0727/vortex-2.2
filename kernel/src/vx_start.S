@@ -137,7 +137,7 @@ init_regs:
   # set thread pointer register    # 每个thread，都需要独立TLS空间
   # use address space after BSS region
   # tp = _end + (hart_id * TLS_SIZE)
-  la    t1, __tbss_size                    # TLS 数据块的大小; 链接脚本中定义的。
+  la    t1, __tbss_size                    # TLS 数据块的大小; （由你的程序中声明了多少 __thread 变量，链接阶段自动计算出来）
   mul   t0, t0, t1                         # 偏移量
   la    tp, _end                           # TLS 区域通常放在 BSS 后面
   add   tp, tp, t0                         # 每个线程有独立的 TLS 副本
