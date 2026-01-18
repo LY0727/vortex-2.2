@@ -220,15 +220,17 @@
 `define LMEM_BASE_ADDR  `STACK_BASE_ADDR
 `endif
 
-// 字符输出设备，可见 vx_print.s 中对0x40地址的使用。
-// IO_COUT_SIZE 64字节，足够存放字符串了。
+// 字符输出设备：可见 vx_print.s 中对0x40地址的使用。
+// IO_COUT_SIZE 64字节，这个参数大小的作用需要理解！ 实际硬件实现时需要设置多大？
 `ifndef IO_COUT_ADDR
 `define IO_COUT_ADDR    `IO_BASE_ADDR
 `endif
 `define IO_COUT_SIZE    64
-// 内存映射性能计数器：  每个core 8个32位寄存器，依次分配计数器地址空间。
+// 性能计数器内存映射地址：  每个计数器8字节，每个core 32个计数器， 256 Bytes/ core。
+// 执行结束时，core内CSR寄存器的值通过csrr读出到这里的内存空间，供运行时读取和打印。
+// 看 kernel/ 部分，
 `ifndef IO_MPM_ADDR
-`define IO_MPM_ADDR     (`IO_COUT_ADDR + `IO_COUT_SIZE)
+`define IO_MPM_ADDR     (`IO_COUT_ADDR + `IO_COUT_SIZE)        
 `endif
 `define IO_MPM_SIZE     (8 * 32 * `NUM_CORES * `NUM_CLUSTERS)
 

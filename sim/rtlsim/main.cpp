@@ -75,7 +75,7 @@ int main(int argc, char **argv) {
 #if (XLEN == 64)
     processor.dcr_write(VX_DCR_BASE_STARTUP_ADDR1, startup_addr >> 32);
 #endif
-	processor.dcr_write(VX_DCR_BASE_MPM_CLASS, 0);
+	processor.dcr_write(VX_DCR_BASE_MPM_CLASS, 0);  
 
 	// load program
 	{

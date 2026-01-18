@@ -7,6 +7,7 @@ else
 CFLAGS += -march=rv32imaf -mabi=ilp32f
 endif
 
+# 未使用
 LLVM_CFLAGS += --sysroot=$(RISCV_SYSROOT)
 LLVM_CFLAGS += --gcc-toolchain=$(RISCV_TOOLCHAIN_PATH)
 LLVM_CFLAGS += -Xclang -target-feature -Xclang +vortex -mllvm -vortex-branch-divergence=0
@@ -38,7 +39,7 @@ CFLAGS += -I$(VORTEX_KN_PATH)/include -I$(ROOT_DIR)/hw
 CFLAGS += -DXLEN_$(XLEN) -DNDEBUG
 
 # 库文件依赖：
-# 虽然用了 -nostdlib，但我们还是手动链接了 Vortex 定制的 libc (Newlib) 和 libm (数学库)。
+# 虽然用了 -nostdlib，但我们手动链接了 Vortex 预编译的 libc (Newlib) 和 libm (数学库)。
 # libclang_rt.builtins: 编译器内置函数库。用于处理硬件不支持的操作（比如如果硬件不支持除法，这里会提供软除法函数）。
 LIBC_LIB += -L$(LIBC_VORTEX)/lib -lm -lc
 LIBC_LIB += $(LIBCRT_VORTEX)/lib/baremetal/libclang_rt.builtins-riscv$(XLEN).a

@@ -1,3 +1,11 @@
+/*
+ * @Author: lao liuao0727@foxmail.com
+ * @Date: 2025-01-04 16:27:12
+ * @LastEditors: lao liuao0727@foxmail.com
+ * @LastEditTime: 2026-01-14 11:48:22
+ * @FilePath: /vortex-2.2/kernel/include/vx_spawn.h
+ * @Description: 这是默认设置,请设置`customMade`, 打开koroFileHeader查看配置 进行设置: https://github.com/OBKoro1/koro1FileHeader/wiki/%E9%85%8D%E7%BD%AE
+ */
 // Copyright © 2019-2023
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -38,8 +46,9 @@ extern dim3_t blockDim;
 extern __thread uint32_t __local_group_id;
 extern uint32_t __warps_per_group;
 
+// 定义函数指针类型 vx_kernel_func_cb；  类型为：  void function(void * arg);
 typedef void (*vx_kernel_func_cb)(void *arg);
-
+// 定义函数指针类型 vx_serial_cb；       类型为：  void function(void * arg);
 typedef void (*vx_serial_cb)(void *arg);
 
 #define __local_mem(size) \
@@ -56,7 +65,7 @@ int vx_spawn_threads(uint32_t dimension,
                      const void* arg); 
 
 // function call serialization
-void  (vx_serial_cb callback, const void * arg);
+void vx_serial(vx_serial_cb callback, const void * arg);
 
 #ifdef __cplusplus
 }

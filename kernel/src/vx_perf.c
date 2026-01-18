@@ -1,3 +1,11 @@
+/*
+ * @Author: lao liuao0727@foxmail.com
+ * @Date: 2025-01-04 16:27:12
+ * @LastEditors: lao liuao0727@foxmail.com
+ * @LastEditTime: 2026-01-14 18:29:40
+ * @FilePath: /vortex-2.2/kernel/src/vx_perf.c
+ * @Description: 这是默认设置,请设置`customMade`, 打开koroFileHeader查看配置 进行设置: https://github.com/OBKoro1/koro1FileHeader/wiki/%E9%85%8D%E7%BD%AE
+ */
 // Copyright © 2019-2023
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -32,6 +40,8 @@ extern "C" {
 
 void vx_perf_dump() {
     int core_id = vx_core_id();
+    // 这一行是确定每个core的mpm寄存器存储位置; 
+    // IO_MPM_ADDR是mpm寄存器的基地址,这个空间计算定义有点怪！但32*2*4=256 Bytes/core 倒也没问题。
     uint32_t * const csr_mem = (uint32_t*)(IO_MPM_ADDR + 64 * sizeof(uint32_t) * core_id);
     DUMP_CSRS(0);
     //DUMP_CSRS(1); reserved for exitcode

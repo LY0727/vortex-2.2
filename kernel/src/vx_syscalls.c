@@ -163,3 +163,43 @@ void __funcs_on_exit (void) {
 #ifdef __cplusplus
 }
 #endif
+
+
+/*
+3. Vortex Kernel 的实现情况分析
+让我们回到 vx_syscalls.c，看看 Vortex 实现了什么，放弃了什么。
+
+A. 已实现 (Implemented)
+  _write
+    实现：循环调用 vx_putchar。
+    原因：这是最基本的需求。没有它，程序无法输出任何调试信息，无法打印 "Hello World"。
+  _getpid
+    实现：返回 vx_hart_id()。
+    原因：Vortex 是多线程架构，用 Hart ID 来模拟 Process ID 是非常合理的映射，方便调试时区分是谁在打印日志。
+  _exit (在 vx_start.S 中实现)
+    实现：转储性能数据并终止执行。
+    原因：程序跑完了必须有个结束的地方。
+B. 未实现 / 哑实现 (Stubbed out)
+  _sbrk (实现为崩溃 ebreak)
+    状态：不支持。
+    原因：
+    硬件限制：GPU/加速器通常没有复杂的内存管理单元（MMU）来处理堆的动态增长。
+    编程模型：在 SIMT 编程（如 CUDA/OpenCL）中，Kernel 内部通常禁止 malloc。内存应该由 Host 端分配好，通过指针传进来。在 Kernel 里 malloc 会导致严重的内存碎片和线程安全问题（成千上万个线程同时抢堆锁）。
+  文件系统相关 (_open, _close, _read, _lseek, _fstat)
+    状态：返回错误 (-1) 或 0。
+    原因：Vortex 是一个计算核心，不是操作系统。它没有挂载磁盘，也没有文件系统驱动。它只能通过 _write 向 Host 的控制台吐字符，无法读写文件。
+  进程控制相关 (_kill)
+    状态：返回错误。
+    原因：Vortex 是裸机运行环境，没有操作系统内核来管理信号（Signal）和进程间通信。
+
+4. 总结
+Vortex 的 vx_syscalls.c 是一个最小化的实现，
+只保留了：
+能说话 (_write)：为了调试。
+知道自己是谁 (_getpid)：为了多线程调试。
+
+它砍掉了：
+动态内存 (_sbrk)：为了性能和简化模型。
+文件系统：因为硬件不支持。
+
+*/
