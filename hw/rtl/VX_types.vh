@@ -199,7 +199,7 @@
 `define VX_CSR_MIMPID                   12'hF13
 `define VX_CSR_MHARTID                  12'hF14  // 这里的 hart 指的是硬件线程，也就是 core id，vortex有使用。
 
-// GPGPU CSRs
+// GPGPU CSRs 
 // 在 vx_intrinsics.h 中，读取这些 CSR 的操作，被封装成了函数：
 `define VX_CSR_THREAD_ID                12'hCC0  // 当前线程 ID (0..N-1)
 `define VX_CSR_WARP_ID                  12'hCC1  // 当前 Warp ID

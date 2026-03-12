@@ -32,7 +32,7 @@ module VX_core_top import VX_gpu_pkg::*; #(
     output wire [DCACHE_NUM_REQS-1:0]       dcache_req_rw,
     output wire [DCACHE_NUM_REQS-1:0][DCACHE_WORD_SIZE-1:0] dcache_req_byteen,
     output wire [DCACHE_NUM_REQS-1:0][DCACHE_ADDR_WIDTH-1:0] dcache_req_addr,
-    output wire [DCACHE_NUM_REQS-1:0][`ADDR_TYPE_WIDTH-1:0] dcache_req_atype,
+    output wire [DCACHE_NUM_REQS-1:0][`ADDR_TYPE_WIDTH-1:0] dcache_req_atype,  // 地址类型标识位，用于区分这是普通全局地址、本地共享内存(LMEM)地址、还是 IO 映射内存地址。
     output wire [DCACHE_NUM_REQS-1:0][DCACHE_WORD_SIZE*8-1:0] dcache_req_data,
     output wire [DCACHE_NUM_REQS-1:0][DCACHE_TAG_WIDTH-1:0] dcache_req_tag,
     input  wire [DCACHE_NUM_REQS-1:0]       dcache_req_ready,

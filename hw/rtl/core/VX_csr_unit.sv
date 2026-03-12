@@ -32,10 +32,10 @@ module VX_csr_unit import VX_gpu_pkg::*; #(
     VX_fpu_csr_if.slave         fpu_csr_if [`NUM_FPU_BLOCKS],
 `endif
 
-    VX_commit_csr_if.slave      commit_csr_if,
-    VX_sched_csr_if.slave       sched_csr_if,
-    VX_execute_if.slave         execute_if,
-    VX_commit_if.master         commit_if
+    VX_commit_csr_if.slave      commit_csr_if,  // 退休指令数
+    VX_sched_csr_if.slave       sched_csr_if,   // 时钟周期数、活跃warp数、线程掩码、alm_empty信号
+    VX_execute_if.slave         execute_if,     // 来自执行阶段的CSR访问请求
+    VX_commit_if.master         commit_if       // 送到提交阶段的CSR访问响应
 );
     `UNUSED_SPARAM (INSTANCE_ID)
     localparam PID_BITS   = `CLOG2(`NUM_THREADS / NUM_LANES);
@@ -58,9 +58,10 @@ module VX_csr_unit import VX_gpu_pkg::*; #(
     wire is_fpu_csr = (csr_addr <= `VX_CSR_FCSR);
 
     // wait for all pending instructions for current warp to complete
+    // 只有访问FPU相关CSR时才需要等待当前warp内指令完成
     assign sched_csr_if.alm_empty_wid = execute_if.data.wid;
-    wire no_pending_instr = sched_csr_if.alm_empty || ~is_fpu_csr;
-
+    wire no_pending_instr = sched_csr_if.alm_empty || ~is_fpu_csr; 
+    
     wire csr_req_valid = execute_if.valid && no_pending_instr;
     assign execute_if.ready = csr_req_ready && no_pending_instr;
 
@@ -79,7 +80,7 @@ module VX_csr_unit import VX_gpu_pkg::*; #(
         .clk            (clk),
         .reset          (reset),
 
-        .base_dcrs      (base_dcrs),
+        .base_dcrs      (base_dcrs),  // 配置性能CSR的功能复用组
 
     `ifdef PERF_ENABLE
         .mem_perf_if    (mem_perf_if),
@@ -121,12 +122,13 @@ module VX_csr_unit import VX_gpu_pkg::*; #(
         end
         assign gtid[i] = (`XLEN'(CORE_ID) << (`NW_BITS + `NT_BITS)) + (`XLEN'(execute_if.data.wid) << `NT_BITS) + wtid[i];
     end
-
+    // 如果是读thread id,实际上不需要访问CSR寄存器,通过计算得到wtid和gtid即可.
+    // 如果是读其他csr寄存器,那么每个lane读到的数据都是一样的,CSR寄存器物理上只需要保存一份.
     always @(*) begin
         csr_rd_enable = 0;
         case (csr_addr)
-        `VX_CSR_THREAD_ID : csr_read_data = wtid;
-        `VX_CSR_MHARTID   : csr_read_data = gtid;
+        `VX_CSR_THREAD_ID : csr_read_data = wtid;// warp内的thread ID，范围是0~(NUM_THREADS-1)
+        `VX_CSR_MHARTID   : csr_read_data = gtid;// grid(全局)的thread ID，{core_id, wid, wtid}
         default : begin
             csr_read_data = {NUM_LANES{csr_read_data_ro | csr_read_data_rw}};
             csr_rd_enable = 1;
@@ -154,13 +156,14 @@ module VX_csr_unit import VX_gpu_pkg::*; #(
         endcase
     end
 
-    // unlock the warp
+    // unlock the warp   只有是访问FPU相关CSR的指令才会锁warp，等指令执行到最后一个周期且是FPU相关CSR时才解锁warp
     assign sched_csr_if.unlock_warp = csr_req_valid && csr_req_ready && execute_if.data.eop && is_fpu_csr;
     assign sched_csr_if.unlock_wid = execute_if.data.wid;
-
+    // 整个模块就是这一个cycle的延时.
+    // 读csr是纯组合逻辑,写csr虽然在写mscratch 和 fcsr 时,是有实际的reg写入时序一拍,但是和提交是并行的.
     VX_elastic_buffer #(
         .DATAW (DATAW),
-        .SIZE  (2)
+        .SIZE  (2)   
     ) rsp_buf (
         .clk       (clk),
         .reset     (reset),

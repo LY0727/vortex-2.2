@@ -151,17 +151,20 @@ int test_wsapwn() {
 
 ///////////////////////////////////////////////////////////////////////////////
 // test 5 : Control Divergence 测试：激活4个线程，线程0写入'A'，线程1写入'B'，线程2写入'C'，线程3写入'D'。
+// 反汇编代码在  800005b0 <_Z13do_divergencev>:       
 int dvg_buffer[4];
 
 void __attribute__((noinline)) __attribute__((optimize("O1"))) do_divergence() {
 	int tid = vx_thread_id();
-	int cond1 = tid < 2;
-	int sp1 = vx_split(cond1);
+	int cond1 = tid < 2;		// 硬件上cmp指令，结果存入谓词寄存器
+	int sp1 = vx_split(cond1);	// 硬件上split指令，根据谓词寄存器的值进行分支，如果确实发生了分支发散，会对ipdom进行push,得到对应的 stack_ptr。
+							 	// 这个指针会一路传递到wctl单元的commit阶段，写回到一个RD寄存器；后续作为join指令的输入参数，用于识别对应的join指令。
+							  	// join指令根据这个指针来判断他对应的那个split是否真的发散了分支发散，如果没有发散，join指令就直接unlock warp；如果确实发生了分支发散，join指令就会根据这个指针找到对应的split指令，然后把那个split指令的ntaken分支的线程掩码重新激活。
 	if (cond1) {
 		// 两个{}块，
 		{
-			int cond2 = tid < 1;
-			int sp2 = vx_split(cond2);
+			int cond2 = tid < 1;      
+			int sp2 = vx_split(cond2);                                                    
 			if (cond2) {
 				dvg_buffer[tid] = 65; // A
 			} else {
@@ -169,7 +172,7 @@ void __attribute__((noinline)) __attribute__((optimize("O1"))) do_divergence() {
 			}
 			vx_join(sp2);
 		}
-		// always false，边界case: 全假分支处理，硬件如何处理？
+		// always false，边界case: 全假分支,并没有实际的分支发散，硬件中会判断，发现没有分支发散，就不会进行真正的分支处理，join指令也会直接当作nop处理。
 		{
 			int cond3 = tid < 0;    
 			int sp3 = vx_split(cond3);

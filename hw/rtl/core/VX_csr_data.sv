@@ -78,6 +78,11 @@ import VX_fpu_pkg::*;
     reg [`XLEN-1:0] mscratch;
 
 `ifdef EXT_F_ENABLE
+    // FPU相关CSR寄存器的设计比较特殊. 由于每个warp内的线程可能会有不同的指令流, 因此访问FPU相关CSR的指令需要等到warp内所有线程都执行到这条指令时才能执行.
+    // 另外, FPU相关CSR寄存器需要为每个warp保存一份, 因此物理上需要有`NUM_WARPS`份寄存器. 
+    // 但是对于同一条指令, warp内所有线程访问的FPU相关CSR寄存器地址都是一样的, 因此逻辑上只需要保存一份地址就行了.
+    // 下面的代码实现了这个功能. fcsr寄存器数组保存了每个warp的FPU相关CSR寄存器的值, 但是访问时根据当前指令的wid来访问对应warp的寄存器. 
+    // 只有当访问FPU相关CSR寄存器时才会锁warp, 等指令执行到最后一个周期且是FPU相关CSR时才解锁warp.
     reg [`NUM_WARPS-1:0][`INST_FRM_BITS+`FP_FLAGS_BITS-1:0] fcsr, fcsr_n;
     wire [`NUM_FPU_BLOCKS-1:0]              fpu_write_enable;
     wire [`NUM_FPU_BLOCKS-1:0][`NW_WIDTH-1:0] fpu_write_wid;
@@ -143,8 +148,9 @@ import VX_fpu_pkg::*;
                 `VX_CSR_PMPADDR0: begin
                     // do nothing!
                 end
+                // 在vortex中,利用mscratch寄存器,给kernel函数传递参数结构体的地址. 具体来说,在kernel函数的入口处,会有一条指令把mscratch寄存器的值读出来,作为参数结构体的地址,然后从这个地址读取参数结构体. 因此,mscratch寄存器需要能够保存数据.
                 `VX_CSR_MSCRATCH: begin
-                    mscratch <= write_data;
+                    mscratch <= write_data;   // mscratch寄存器是唯一一个可以被软件读写的CSR寄存器，其他CSR寄存器要么是只读的，要么是写了也不保存数据的. mscratch寄存器通常用来保存异常发生时的上下文信息，或者在异常处理程序中保存一些临时数据等. 因此mscratch寄存器需要能够保存数据.
                 end
                 default: begin
                     `ASSERT(0, ("%t: *** %s invalid CSR write address: %0h (#%0d)", $time, INSTANCE_ID, write_addr, write_uuid));
@@ -154,9 +160,14 @@ import VX_fpu_pkg::*;
     end
 
     // CSRs read //////////////////////////////////////////////////////////////
-
-    reg [`XLEN-1:0] read_data_ro_r;
-    reg [`XLEN-1:0] read_data_rw_r;
+    // 在读出组合逻辑中 always@(*) ，根据 read_addr 开启了一个极其庞大的 switch-case。
+    // 很多状态并不在 CSR 模块里，而是在这个时钟周期直接作为连线引脚 (Pins) 抓取的。
+    // 1. 抓取系统物理常量，如 `NUM_THREADS`、`NUM_WARPS`、`NUM_CORES` 等等。
+    // 2. 抓取调度器接口的状态，如 `cycles`、`active_warps`、`thread_masks` 等等。
+    // 3. 抓取提交接口的状态，如 `instret` 等等。
+    // 4. 抓取性能计数器接口的状态，如 `pipeline_perf_if`、`mem_perf_if` 等等。  (根据MEM模式配置)
+    reg [`XLEN-1:0] read_data_ro_r; // 只读CSR寄存器的读数据
+    reg [`XLEN-1:0] read_data_rw_r; // 可读写CSR寄存器的读数据, 只有当指令访问的CSR寄存器既有只读部分又有可读写部分时才会用到.
     reg read_addr_valid_r;
 
     always @(*) begin
@@ -189,7 +200,7 @@ import VX_fpu_pkg::*;
             `VX_CSR_MPM_RESERVED : read_data_ro_r = 'x;
             `VX_CSR_MPM_RESERVED_H : read_data_ro_r = 'x;
 
-            `CSR_READ_64(`VX_CSR_MINSTRET, read_data_ro_r, commit_csr_if.instret);
+            `CSR_READ_64(`VX_CSR_MINSTRET, read_data_ro_r, commit_csr_if.instret); 
 
             `VX_CSR_SATP,
             `VX_CSR_MSTATUS,

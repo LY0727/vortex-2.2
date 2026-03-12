@@ -8,7 +8,9 @@
 
 ## 1、HW阅读
 
-## 1.1 CORE阅读
+## 1.1 全局架构与接口定义 
+
+## 1.2 CORE阅读
 
 ### 1.1.1 概述
 
@@ -297,4 +299,35 @@ VX_types.vh 可以看到vortex项目所有的DCR和CSR定义：
 
 ### 4.1 总结
 
-### 4.2 源码阅读
+如果把仿真环境看作一台真实的电脑：
+
+1. main.cpp 就是 “开机按电源的人”：它负责准备内存条（分配 RAM）、插上 CPU（实例化 Processor）、通电、把操作系统（.bin/.hex文件）拷进内存，最后监控电脑的关机状态。
+2. processor.h 是 “主板插槽接口”：它定义了外部使用者可以调用的极简操控按键（连接内存、运行、写寄存器）。
+3. processor.cpp 则是 “主板布线与总线控制器”：它是真正的幕后英雄，利用 Verilator 把复杂的硬件引脚转化为 C++ 变量，控制时钟的心跳，并充当 CPU 与 内存 之间的“快递员”。
+
+### 4.2 关键内容
+
+1. 软件内存总线机制 (Custom Request-Response Bus)
+   排除了 AXI 总线后，Vortex 使用了一套极简的请求应答总线。具体由 mem_bus_eval(bool clk) 掌控。它分为两部分：
+
+* 处理 CPU 的发出请求 (Device -> Mem)：
+  * CPU 拉高 mem_req_valid，表示我要干活。
+  * 如果是写 (mem_req_rw == 1)：直接将数据写入底层的 ram_ 数组中。然后生成一个打包对象 mem_req，丢给 dram_sim_ 去模拟延迟。
+  * 如果是读 (mem_req_rw == 0)：同样去底层 ram_ 拿数据，但是先不给 CPU。而是把含有数据的 mem_req 设置为 ready = false，放进 pending_mem_reqs_ 列表排队，同时也交给 dram_sim_ 去模拟延迟。
+* 处理 给 CPU 的响应结果 (Mem -> Device)：
+  * 由于每次时钟跳动都会巡视 pending_mem_reqs_，一旦发现队列里有请求的 ready == true（说明 DRAM 延迟结束了）。
+  * 就把数据放到 device_->mem_rsp_data 总线上，拉高 device_->mem_rsp_valid = 1。告诉 CPU ：“喏，你要的数据慢悠悠地读回来了”。
+
+2. 巧妙的控制台输出拦截 (IO_COUT)
+   如何通过 Verilog 硬件实现在电脑终端上打印 printf？
+   **源码揭秘：** 硬件实际上并没有屏幕。当 C++ 检测到 CPU 试图往一个特定的“内存地址” (IO_COUT_ADDR) 写数据时，仿真器会偷梁换柱，不把数据写进真正的 RAM，而是字符捕获到 print_bufs_ 这个哈希表（每个 Core 一个字符串流）中。当检测到换行符 \n 时，C++ 直接调用 std::cout 打印到你的显示器上。这是一种经典的 Memory-Mapped IO (MMIO) 拦截技术。
+3. C++ 内存管理与 Lambda 回调生命周期
+   仿真器每时每刻都在产生新的 mem_req_t 对象（使用 new 发配在堆内存上），如果不释放会导致内存泄漏。
+
+* 在 tick() 函数中调用了 dram_sim_.send_request(..., 回调函数) 机制。
+  Lambda 回调 [](void* arg){...} 会在未来的某个时钟节拍（等待 DRAM 模拟器经过了设定的延迟后）异步触发。
+* 垃圾回收策略：
+  * 如果是写事务：不需要向数据总线返回结果，回调函数一触发，立刻执行 delete orig_req，释放内存。
+  * 如果是读事务：将 orig_req->ready = true。随后，mem_bus_eval 会在下一拍检测到 ready == true，将数据送回总线后，由 mem_bus_eval 亲自执行 delete mem_rsp（即此时的 orig_req）。
+
+## 5、TESTS/riscv

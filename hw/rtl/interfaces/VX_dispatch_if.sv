@@ -24,7 +24,7 @@ interface VX_dispatch_if import VX_gpu_pkg::*; ();
         op_args_t                           op_args;
         logic                               wb;
         logic [`NR_BITS-1:0]                rd;
-        logic [`NT_WIDTH-1:0]               tid;
+        logic [`NT_WIDTH-1:0]               tid;  // 这个tid设置为tmask中最后一个有效位的tid，供后续特殊写回或者统计使用。
         logic [`NUM_THREADS-1:0][`XLEN-1:0] rs1_data;
         logic [`NUM_THREADS-1:0][`XLEN-1:0] rs2_data;
         logic [`NUM_THREADS-1:0][`XLEN-1:0] rs3_data;

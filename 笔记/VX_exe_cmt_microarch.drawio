@@ -1,0 +1,109 @@
+<mxfile host="65bd71144e">
+    <diagram id="vx_exe_cmt" name="Execute &amp; Commit Microarchitecture">
+        <mxGraphModel dx="1093" dy="1029" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1200" pageHeight="900" math="0" shadow="0">
+            <root>
+                <mxCell id="0"/>
+                <mxCell id="1" parent="0"/>
+                <mxCell id="bg_exe" value="Execute Stage (VX_execute.sv)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=none;strokeColor=#B3B3B3;strokeWidth=2;dashed=1;verticalAlign=top;spacingTop=10;fontFamily=Helvetica;fontSize=16;fontStyle=1;fontColor=#616161;arcSize=2;" parent="1" vertex="1">
+                    <mxGeometry x="200" y="80" width="540" height="700" as="geometry"/>
+                </mxCell>
+                <mxCell id="bg_cmt" value="Commit Stage (VX_commit.sv)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=none;strokeColor=#B3B3B3;strokeWidth=2;dashed=1;verticalAlign=top;spacingTop=10;fontFamily=Helvetica;fontSize=16;fontStyle=1;fontColor=#616161;arcSize=2;" parent="1" vertex="1">
+                    <mxGeometry x="780" y="80" width="280" height="700" as="geometry"/>
+                </mxCell>
+                <mxCell id="disp_in" value="&lt;b&gt;&lt;font style=&quot;font-size: 14px;&quot;&gt;dispatch_if&lt;/font&gt;&lt;/b&gt;&lt;br&gt;[ISSUE_WIDTH]&lt;br&gt;(Valid, PC, op_type, tmask, rs1, rs2...)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e3f2fd;strokeColor=#1e88e5;strokeWidth=2;fontFamily=Helvetica;fontColor=#0d47a1;fontSize=12;" parent="1" vertex="1">
+                    <mxGeometry x="20" y="380" width="140" height="80" as="geometry"/>
+                </mxCell>
+                <mxCell id="alu_bg" value="VX_alu_unit" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;strokeWidth=1;verticalAlign=top;spacingTop=10;fontFamily=Helvetica;fontSize=14;fontStyle=1;fontColor=#333333;arcSize=5;" parent="1" vertex="1">
+                    <mxGeometry x="230" y="140" width="480" height="280" as="geometry"/>
+                </mxCell>
+                <mxCell id="disp_unit" value="&lt;b&gt;VX_dispatch_unit&lt;/b&gt;&lt;br&gt;&lt;i&gt;Packet Splitter&lt;/i&gt;&lt;br&gt;(NUM_THREADS -&amp;gt; NUM_LANES)" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#e0f7fa;strokeColor=#00acc1;strokeWidth=2;fontFamily=Helvetica;fontColor=#006064;fontSize=12;" parent="1" vertex="1">
+                    <mxGeometry x="260" y="200" width="100" height="150" as="geometry"/>
+                </mxCell>
+                <mxCell id="alu_int" value="&lt;b&gt;VX_alu_int&lt;/b&gt;&lt;br&gt;(1-cycle Int / Branch)" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#c8e6c9;strokeColor=#43a047;strokeWidth=2;fontFamily=Helvetica;fontColor=#1b5e20;fontSize=12;" parent="1" vertex="1">
+                    <mxGeometry x="420" y="180" width="120" height="60" as="geometry"/>
+                </mxCell>
+                <mxCell id="alu_mul" value="&lt;b&gt;VX_alu_muldiv&lt;/b&gt;&lt;br&gt;(Multi-cycle)" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#c8e6c9;strokeColor=#43a047;strokeWidth=2;fontFamily=Helvetica;fontColor=#1b5e20;fontSize=12;" parent="1" vertex="1">
+                    <mxGeometry x="420" y="310" width="120" height="60" as="geometry"/>
+                </mxCell>
+                <mxCell id="gath_unit" value="&lt;b&gt;VX_gather_unit&lt;/b&gt;&lt;br&gt;&lt;i&gt;Packet Merger&lt;/i&gt;&lt;br&gt;+ Out Buffer" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#e0f7fa;strokeColor=#00acc1;strokeWidth=2;fontFamily=Helvetica;fontColor=#006064;fontSize=12;" parent="1" vertex="1">
+                    <mxGeometry x="580" y="200" width="100" height="150" as="geometry"/>
+                </mxCell>
+                <mxCell id="br_ctl" value="&lt;b&gt;branch_ctl_if&lt;/b&gt;&lt;br&gt;(To Schedule)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff3e0;strokeColor=#f57c00;strokeWidth=2;fontFamily=Helvetica;fontColor=#e65100;fontSize=12;" parent="1" vertex="1">
+                    <mxGeometry x="430" y="10" width="100" height="50" as="geometry"/>
+                </mxCell>
+                <mxCell id="lsu_unit" value="&lt;b&gt;VX_lsu_unit&lt;/b&gt;&lt;br&gt;(Load/Store + Cache Interfaces)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;strokeWidth=2;fontFamily=Helvetica;fontColor=#333333;fontSize=12;" parent="1" vertex="1">
+                    <mxGeometry x="230" y="460" width="480" height="60" as="geometry"/>
+                </mxCell>
+                <mxCell id="sfu_unit" value="&lt;b&gt;VX_sfu_unit&lt;/b&gt;&lt;br&gt;(CSR / Warp Control / SIMT SPLIT &amp;amp; JOIN)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fce4ec;strokeColor=#d81b60;strokeWidth=2;fontFamily=Helvetica;fontColor=#880e4f;fontSize=12;" parent="1" vertex="1">
+                    <mxGeometry x="230" y="560" width="480" height="60" as="geometry"/>
+                </mxCell>
+                <mxCell id="fpu_unit" value="&lt;b&gt;VX_fpu_unit&lt;/b&gt;&lt;br&gt;(Floating Point)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;strokeWidth=2;fontFamily=Helvetica;fontColor=#333333;fontSize=12;dashed=1;" parent="1" vertex="1">
+                    <mxGeometry x="230" y="660" width="480" height="60" as="geometry"/>
+                </mxCell>
+                <mxCell id="cmt_arb" value="&lt;b&gt;VX_stream_arb&lt;/b&gt;&lt;br&gt;(Round-Robin)&lt;br&gt;per Issue Slot&lt;br&gt;&lt;br&gt;[NUM_EX_UNITS -&amp;gt; 1]" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff9c4;strokeColor=#fbc02d;strokeWidth=2;fontFamily=Helvetica;fontColor=#f57f17;fontSize=12;" parent="1" vertex="1">
+                    <mxGeometry x="810" y="320" width="120" height="240" as="geometry"/>
+                </mxCell>
+                <mxCell id="cmt_csr" value="&lt;b&gt;CSRs Update&lt;/b&gt;&lt;br&gt;Popcount(tmask) -&amp;gt; instret" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e8eaf6;strokeColor=#ad1457;strokeWidth=2;fontFamily=Helvetica;fontColor=#880e4f;fontSize=12;" parent="1" vertex="1">
+                    <mxGeometry x="860" y="160" width="160" height="60" as="geometry"/>
+                </mxCell>
+                <mxCell id="cmt_sched_if" value="&lt;b&gt;commit_sched_if&lt;/b&gt;&lt;br&gt;(Free Warp on EOP)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff3e0;strokeColor=#f57c00;strokeWidth=2;fontFamily=Helvetica;fontColor=#e65100;fontSize=12;" parent="1" vertex="1">
+                    <mxGeometry x="1100" y="260" width="120" height="50" as="geometry"/>
+                </mxCell>
+                <mxCell id="wb_if" value="&lt;b&gt;&lt;font style=&quot;font-size: 14px;&quot;&gt;writeback_if [wb]&lt;/font&gt;&lt;/b&gt;&lt;br&gt;(To Operands/GPR)&lt;br&gt;0-Backpressure" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fce4ec;strokeColor=#d81b60;strokeWidth=2;fontFamily=Helvetica;fontColor=#880e4f;fontSize=12;" parent="1" vertex="1">
+                    <mxGeometry x="1100" y="415" width="140" height="80" as="geometry"/>
+                </mxCell>
+                <mxCell id="e_disp" style="edgeStyle=orthogonalEdgeStyle;html=1;entryX=0;entryY=0.5;strokeWidth=2;" parent="1" source="disp_in" target="bg_exe" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="e_disp_alu" style="edgeStyle=orthogonalEdgeStyle;html=1;entryX=0;entryY=0.5;strokeWidth=1.5;" parent="1" source="disp_in" target="disp_unit" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="e_disp_lsu" style="edgeStyle=orthogonalEdgeStyle;html=1;entryX=0;entryY=0.5;strokeWidth=1.5;" parent="1" source="disp_in" target="lsu_unit" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="e_disp_sfu" style="edgeStyle=orthogonalEdgeStyle;html=1;entryX=0;entryY=0.5;strokeWidth=1.5;" parent="1" source="disp_in" target="sfu_unit" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="e_disp_fpu" style="edgeStyle=orthogonalEdgeStyle;html=1;entryX=0;entryY=0.5;strokeWidth=1.5;dashed=1;" parent="1" source="disp_in" target="fpu_unit" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="e_alu1" style="edgeStyle=orthogonalEdgeStyle;html=1;entryX=0;entryY=0.5;strokeWidth=1.5;" parent="1" source="disp_unit" target="alu_int" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="e_alu2" style="edgeStyle=orthogonalEdgeStyle;html=1;entryX=0;entryY=0.5;strokeWidth=1.5;" parent="1" source="disp_unit" target="alu_mul" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="e_gath1" style="edgeStyle=orthogonalEdgeStyle;html=1;entryX=0;entryY=0.2;strokeWidth=1.5;" parent="1" source="alu_int" target="gath_unit" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="e_gath2" style="edgeStyle=orthogonalEdgeStyle;html=1;entryX=0;entryY=0.8;strokeWidth=1.5;" parent="1" source="alu_mul" target="gath_unit" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="e_br" style="edgeStyle=orthogonalEdgeStyle;html=1;exitX=0.5;exitY=0;entryX=0.5;entryY=1;strokeWidth=2;strokeColor=#f57c00;" parent="1" source="alu_int" target="br_ctl" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="e_exe_cmt1" style="edgeStyle=orthogonalEdgeStyle;html=1;entryX=0;entryY=0.2;strokeWidth=1.5;" parent="1" source="gath_unit" target="cmt_arb" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="e_exe_cmt2" style="edgeStyle=orthogonalEdgeStyle;html=1;entryX=0;entryY=0.4;strokeWidth=1.5;" parent="1" source="lsu_unit" target="cmt_arb" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="e_exe_cmt3" style="edgeStyle=orthogonalEdgeStyle;html=1;entryX=0;entryY=0.6;strokeWidth=1.5;" parent="1" source="sfu_unit" target="cmt_arb" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="e_exe_cmt4" style="edgeStyle=orthogonalEdgeStyle;html=1;entryX=0;entryY=0.8;strokeWidth=1.5;dashed=1;" parent="1" source="fpu_unit" target="cmt_arb" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="e_wb" style="edgeStyle=orthogonalEdgeStyle;html=1;exitX=1;exitY=0.5;entryX=0;entryY=0.5;strokeWidth=2;strokeColor=#d81b60;" parent="1" source="cmt_arb" target="wb_if" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="e_sched_notify" style="edgeStyle=orthogonalEdgeStyle;html=1;exitX=1;exitY=0.2;entryX=0;entryY=0.5;strokeWidth=1.5;strokeColor=#f57c00;" parent="1" source="cmt_arb" target="cmt_sched_if" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="e_csr" style="edgeStyle=orthogonalEdgeStyle;html=1;exitX=0.5;exitY=0;entryX=0.5;entryY=1;strokeWidth=1.5;strokeColor=#ad1457;" parent="1" source="cmt_arb" target="cmt_csr" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+            </root>
+        </mxGraphModel>
+    </diagram>
+</mxfile>

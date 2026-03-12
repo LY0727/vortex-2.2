@@ -14,6 +14,35 @@
 `include "VX_platform.vh"
 
 `TRACING_OFF
+
+/*================================================================================
+ * VX_elastic_buffer     vld-rdy握手协议的弹性缓冲区模块
+ *
+模块参数 (Parameters)
+    1.DATAW: 数据位宽，默认为 1。
+    2.SIZE: 缓冲区的深度（可以容纳的数据个数），默认为 1。不同的深度会触发不同的底层实现。
+    3.OUT_REG: 控制输出端是否需要寄存器打拍。（0 表示无额外寄存，1 或 2 可能对应单拍/全带宽寄存，通常用于优化时序）。
+    4.LUTRAM: 布尔类型/标志为。当缓冲区较大需要使用 FIFO 时，指示综合工具是否优先使用分布式 RAM (LUTRAM) 而不是块 RAM (Block RAM)。
+    5.MAX_FANOUT: 最大扇出限制。用于在数据位宽极大时，将数据切片以减轻布线拥塞和时序压力，默认为 0（不作扇出限制）。
+
+功能模式：
+    1. SIZE == 0 (直通模式)
+    2. MAX_FANOUT != 0 且数据宽度较大 (扇出切片优化)
+        当 DATAW 大于允许的安全扇出阈值时，会将整个数据总线切分成多个小片段 (NUM_SLICES)。通过 for 循环，针对每个片段递归例化较窄的 VX_elastic_buffer。
+        这主要是为了解决超宽数据总线（例如 512 位、1024 位）中 valid/ready 控制信号驱动过多寄存器而导致的高扇出时序违例 (Timing Violation) 问题。
+        只有片段 0 的握手信号对上下游可见，其他片段随片段 0 同步。
+    3.SIZE == 1 (单级流水线)  (默认模式)
+        例化 VX_pipe_buffer。适用于只需要打一拍，深度为 1 的场景。
+    4.SIZE == 2 && LUTRAM == 0 (双级 Skid Buffer)
+        例化 VX_skid_buffer。Skid Buffer（防滑缓冲区）是一种经典设计，
+        它既能像寄存器一样切断组合逻辑关键路径（完全解耦 ready 和 valid），又不会损失流水线带宽。
+        深度为 2 是 Skid Buffer 的典型大小。不在乎 RAM 资源 (LUTRAM=0) 时优选此逻辑门的实现。
+    5.SIZE > 2 或其他情况 (通用 FIFO 结构)
+        例化一个基于 RAM 或寄存器堆的通用深度的 FIFO VX_fifo_queue。
+        在这之后还串联了一个 VX_pipe_buffer（根据 OUT_REG 参数配置深度），
+        以便在增加一层缓存的同时，进一步改善末端的时序（改善 output clock-to-q 延迟）。
+ *===========================================================================*/
+
 module VX_elastic_buffer #(
     parameter DATAW   = 1,
     parameter SIZE    = 1,

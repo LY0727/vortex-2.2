@@ -51,18 +51,18 @@ module VX_core import VX_gpu_pkg::*; #(
     VX_decode_sched_if  decode_sched_if();
     VX_commit_sched_if  commit_sched_if();
     VX_commit_csr_if    commit_csr_if();
-    VX_branch_ctl_if    branch_ctl_if[`NUM_ALU_BLOCKS]();
+    VX_branch_ctl_if    branch_ctl_if[`NUM_ALU_BLOCKS]();   // 对应 `ISSUE_WIDTH
     VX_warp_ctl_if      warp_ctl_if();
 
-    VX_dispatch_if      dispatch_if[`NUM_EX_UNITS * `ISSUE_WIDTH]();
+    VX_dispatch_if      dispatch_if[`NUM_EX_UNITS * `ISSUE_WIDTH]();  // 几类执行单元 * 每个执行单元发射宽度
     VX_commit_if        commit_if[`NUM_EX_UNITS * `ISSUE_WIDTH]();
-    VX_writeback_if     writeback_if[`ISSUE_WIDTH]();
+    VX_writeback_if     writeback_if[`ISSUE_WIDTH]();     
 
     VX_lsu_mem_if #(
-        .NUM_LANES (`NUM_LSU_LANES),
+        .NUM_LANES (`NUM_LSU_LANES),  // = `NUM_THREADS
         .DATA_SIZE (LSU_WORD_SIZE),
         .TAG_WIDTH (LSU_TAG_WIDTH)
-    ) lsu_mem_if[`NUM_LSU_BLOCKS]();
+    ) lsu_mem_if[`NUM_LSU_BLOCKS]();  // 固定为1
 
 `ifdef PERF_ENABLE
     VX_mem_perf_if mem_perf_tmp_if();
@@ -110,7 +110,7 @@ module VX_core import VX_gpu_pkg::*; #(
         .warp_ctl_if    (warp_ctl_if),
         .branch_ctl_if  (branch_ctl_if),
 
-        .decode_sched_if(decode_sched_if),
+        .decode_sched_if(decode_sched_if),  
         .commit_sched_if(commit_sched_if),
 
         .schedule_if    (schedule_if),
@@ -140,7 +140,7 @@ module VX_core import VX_gpu_pkg::*; #(
         .reset          (decode_reset),
         .fetch_if       (fetch_if),
         .decode_if      (decode_if),
-        .decode_sched_if(decode_sched_if)
+        .decode_sched_if(decode_sched_if)  // 译码时就知道是否时停顿等伪指令，如果不合法或需要阻塞，直接反馈到sched阶段，停止该warp调度。
     );
 
     VX_issue #(

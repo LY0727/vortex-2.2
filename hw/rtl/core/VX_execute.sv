@@ -40,7 +40,7 @@ module VX_execute import VX_gpu_pkg::*; #(
 
     // scheduler interfaces
     VX_sched_csr_if.slave   sched_csr_if,
-    VX_branch_ctl_if.master branch_ctl_if [`NUM_ALU_BLOCKS],
+    VX_branch_ctl_if.master branch_ctl_if [`NUM_ALU_BLOCKS], // only ALU units need to send branch info to scheduler
     VX_warp_ctl_if.master   warp_ctl_if,
 
     // commit interface
@@ -91,7 +91,7 @@ module VX_execute import VX_gpu_pkg::*; #(
         .fpu_csr_if     (fpu_csr_if)
     );
 `endif
-
+    // 自定义warp控制指令 和 csr读写指令
     VX_sfu_unit #(
         .INSTANCE_ID ($sformatf("%s-sfu", INSTANCE_ID)),
         .CORE_ID (CORE_ID)

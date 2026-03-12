@@ -42,21 +42,22 @@ module VX_issue import VX_gpu_pkg::*; #(
         `PERF_COUNTER_ADD (issue_perf, per_issue_perf, sfu_uses[i], `PERF_CTR_BITS, `ISSUE_WIDTH, (`ISSUE_WIDTH > 2))
     end
 `endif
-
+    // 定位译码阶段传递过来的warp，应该由哪个issue_slices处理。
     wire [ISSUE_ISW_W-1:0] decode_isw = wid_to_isw(decode_if.data.wid);
     wire [ISSUE_WIS_W-1:0] decode_wis = wid_to_wis(decode_if.data.wid);
 
     wire [`ISSUE_WIDTH-1:0] decode_ready_in;
-    assign decode_if.ready = decode_ready_in[decode_isw];
+    assign decode_if.ready = decode_ready_in[decode_isw];  // 这里会综合为Mux，由wid得到isw，再mux出对应的ready信号。
 
     `SCOPE_IO_SWITCH (`ISSUE_WIDTH)
-
+    // issue_id 其实就是 isw 信号。
+    // issue_slice 内部，则由wis信号来区分一个issue单元负责的不同warp。  wid = {isw, wis} 
     for (genvar issue_id = 0; issue_id < `ISSUE_WIDTH; ++issue_id) begin : issue_slices
         VX_decode_if #(
-            .NUM_WARPS (PER_ISSUE_WARPS)
+            .NUM_WARPS (PER_ISSUE_WARPS)  // issue单元负责的warp数量； issue单元之后以wis为索引，而不是wid了。
         ) per_issue_decode_if();
 
-        VX_dispatch_if per_issue_dispatch_if[`NUM_EX_UNITS]();
+        VX_dispatch_if per_issue_dispatch_if[`NUM_EX_UNITS](); 
 
         assign per_issue_decode_if.valid = decode_if.valid && (decode_isw == ISSUE_ISW_W'(issue_id));
         assign per_issue_decode_if.data.uuid = decode_if.data.uuid;
@@ -88,9 +89,9 @@ module VX_issue import VX_gpu_pkg::*; #(
         `ifdef PERF_ENABLE
             .issue_perf   (per_issue_perf[issue_id]),
         `endif
-            .decode_if    (per_issue_decode_if),
-            .writeback_if (writeback_if[issue_id]),
-            .dispatch_if  (per_issue_dispatch_if)
+            .decode_if    (per_issue_decode_if),    // 每个issue单元连接一套译码接口，译码阶段根据wid把指令分发到对应的issue单元。
+            .writeback_if (writeback_if[issue_id]), // 每个issue单元连接一条writeback接口。
+            .dispatch_if  (per_issue_dispatch_if)   // 每个issue单元都有一套dispatch接口。
         );
 
         // Assign transposed dispatch_if

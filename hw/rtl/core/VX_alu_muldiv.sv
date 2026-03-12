@@ -318,7 +318,15 @@ module VX_alu_muldiv #(
 
 `endif
 
-    // can accept new request?
+    // can accept new request?  
+    // 虽然在同一个cycle只能接受一条指令，但是可以实现两个cycle分别接受mul和div，因为硬件模块是独立的。
+    // arb会增加一个cycle的延迟。
+    // mul和div的延迟有几种情况：
+    // 1. 使用dip时：mul和div都是  LATENCY_IMUL（config配置，默认vivado中为4） + 1 (arb的延迟) = 5 cycle
+    // 2. 不使用dpi，RV64时： mul是 (XLEN+1) + 1 = 66 ;div是 XLEN + 1 = 65 cycle；
+    // 3. 不使用dpi，RV32时： 
+    //                      mul: LATENCY_IMUL + 1 (arb的延迟) = 5 cycle
+    //                      div: XLEN + 1 (arb的延迟) = 33 cycle
     assign execute_if.ready = is_mulx_op ? mul_ready_in : div_ready_in;
 
     VX_stream_arb #(

@@ -148,7 +148,7 @@ init_regs:
 .local init_regs_all
 init_regs_all:
   li    t0, -1
-  .insn r RISCV_CUSTOM0, 0, 0, x0, t0, x0  # tmc t0
+  .insn r RISCV_CUSTOM0, 0, 0, x0, t0, x0  # tmc t0  # 激活当前warp的所有线程
   jal   init_regs
   .insn r RISCV_CUSTOM0, 0, 0, x0, x0, x0  # tmc x0  # 线程全杀死，休眠。硬件层面挂起。
   ret
@@ -158,7 +158,7 @@ init_regs_all:
 .local init_tls_all
 init_tls_all:
   li    t0, -1
-  .insn r RISCV_CUSTOM0, 0, 0, x0, t0, x0  # tmc t0
+  .insn r RISCV_CUSTOM0, 0, 0, x0, t0, x0  # tmc t0  # 激活当前warp的所有线程
   call  __init_tls
   .insn r RISCV_CUSTOM0, 0, 0, x0, x0, x0  # tmc x0  # 线程全杀死，休眠。
   ret

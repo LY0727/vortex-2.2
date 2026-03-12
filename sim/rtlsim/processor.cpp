@@ -112,8 +112,8 @@ public:
 
     // turn off assertion before reset
     Verilated::assertOn(false);
-
-    // create RTL module instance
+    // device_ 、ram_ 、 tfp_等成员变量都是在private中声明的，在Impl的构造函数中进行初始化
+    // create RTL module instance  
     device_ = new Device();
 
   #ifdef VCD_OUTPUT
@@ -154,7 +154,10 @@ public:
 
     delete device_;
   }
-
+  
+  // cout_flush函数用于将print_bufs_中的内容打印到控制台，并在打印完成后清空缓冲区
+  // 成员定义部分可知，print_bufs_是一个unordered_map，键为uint32_t类型，值为stringstream类型。
+  // key部分是对应vortex组件中每个core的id，value部分是一个stringstream对象，用于存储该core的输出内容。
   void cout_flush() {
     for (auto& buf : print_bufs_) {
       auto str = buf.second.str();
@@ -163,7 +166,9 @@ public:
       }
     }
   }
-
+  
+  // attach_ram函数用于将RAM实例与Processor实例关联起来，
+  // Impl类中的attach_ram函数将传入的RAM指针保存在Impl实例的成员变量ram_中，以便在后续的内存访问中使用
   void attach_ram(RAM* ram) {
     ram_ = ram;
   }
@@ -176,21 +181,21 @@ public:
 
     // start execution
     running_ = true;
-    device_->reset = 0;
+    device_->reset = 0;   // 高电平复位，低电平运行
 
-    // wait on device to go busy
+    // wait on device to go busy，即等待处理器开始执行程序
     while (!device_->busy) {
       this->tick();
     }
 
-    // wait on device to go idle
+    // wait on device to go idle，即等待处理器执行完程序
     while (device_->busy) {
       this->tick();
     }
 
     // reset device
     this->reset();
-
+    // 程序执行结束，打印输出缓冲区中的内容，并刷新到控制台
     this->cout_flush();
   }
 
@@ -198,7 +203,7 @@ public:
     device_->dcr_wr_valid = 1;
     device_->dcr_wr_addr  = addr;
     device_->dcr_wr_data  = value;
-    while (device_->dcr_wr_valid) {
+    while (device_->dcr_wr_valid) {   // valid信号由dcr_bus_eval函数在每个时钟周期结束时清除
       this->tick();
     }
   }
@@ -237,9 +242,11 @@ private:
   void tick() {
 
     device_->clk = 0;
-    this->eval();
+    // eval()函数会调用device_->eval()，这是Verilator生成的函数，用于评估RTL模块的状态，是vortex组件。
+    // 此外：在每个上升沿和下降沿，都会调用mem_bus_eval()和dcr_bus_eval()函数，以处理内存总线和DCR总线上的请求和响应。
+    this->eval();   
 
-    this->mem_bus_eval(0);
+    this->mem_bus_eval(0);  
     this->dcr_bus_eval(0);
 
     device_->clk = 1;
@@ -247,15 +254,18 @@ private:
 
     this->mem_bus_eval(1);
     this->dcr_bus_eval(1);
-
+    // DRAM模拟器的时钟节拍，在每个时钟周期结束时调用dram_sim_.tick()，以更新DRAM模拟器的状态并处理任何待处理的内存请求
     dram_sim_.tick();
-
+    // 后面再看； 学习Lambda表达式和回调函数的用法； 这里的lambda表达式作为回调函数传递给dram_sim_.send_request()，当DRAM模拟器完成内存请求的处理后，会调用这个回调函数来通知Processor实例。
     if (!dram_queue_.empty()) {
       auto mem_req = dram_queue_.front();
       if (dram_sim_.send_request(mem_req->write, mem_req->addr, 0, [](void* arg) {
-        auto orig_req = reinterpret_cast<mem_req_t*>(arg);
+        // 将传入的void*指针转换回mem_req_t*类型，以便在回调函数中访问内存请求的相关信息。
+        auto orig_req = reinterpret_cast<mem_req_t*>(arg);  
+        // 写事务：ready早就设置为true了，回调函数直接删除请求对象；
+        // 读事务：ready初始为false，等数据准备好后由回调函数设置为true，等待mem_bus_eval函数在下一个时钟周期检测到ready=true后，发送读响应并删除请求对象。
         if (orig_req->ready) {
-          delete orig_req;
+          delete orig_req;      
         } else {
           orig_req->ready = true;
         }
@@ -440,27 +450,32 @@ private:
     device_->mem_req_ready = 0;
     device_->mem_rsp_valid = 0;
   }
-
+  // device <--> impl <--> RAM
   void mem_bus_eval(bool clk) {
+    // 下降沿采样ready,
     if (!clk) {
       mem_rd_rsp_ready_ = device_->mem_rsp_ready;
       return;
     }
-
+    // 如果没有连接RAM，mem_req_ready信号保持为0，表示处理器无法接受内存请求
     if (ram_ == nullptr) {
       device_->mem_req_ready = 0;
       return;
     }
 
-    // process memory read responses
+    // process memory read responses    (mem -> device)
+    // 1. 等待完成逻辑，等上次传输完成，清除active标志。
     if (mem_rd_rsp_active_
     && device_->mem_rsp_valid && mem_rd_rsp_ready_) {
-      mem_rd_rsp_active_ = false;
+      mem_rd_rsp_active_ = false;         
     }
+    // 2. 总线空闲时逻辑
     if (!mem_rd_rsp_active_) {
+      // 检查 pending 队列里有没有已经准备好（ready=true）的读请求
       if (!pending_mem_reqs_.empty()
        && (*pending_mem_reqs_.begin())->ready) {
-        device_->mem_rsp_valid = 1;
+        // 3. 填数据，相关控制信号和数据信号 填到 总线信号线上。
+        device_->mem_rsp_valid = 1; 
         auto mem_rsp_it = pending_mem_reqs_.begin();
         auto mem_rsp = *mem_rsp_it;
         /*
@@ -472,21 +487,24 @@ private:
         */
         memcpy(VDataCast<void*, MEM_BLOCK_SIZE>::get(device_->mem_rsp_data), mem_rsp->block.data(), MEM_BLOCK_SIZE);
         device_->mem_rsp_tag = mem_rsp->tag;
+        // 4. 清理队列，设置active，删除已处理的内存请求对象
         pending_mem_reqs_.erase(mem_rsp_it);
-        mem_rd_rsp_active_ = true;
+        mem_rd_rsp_active_ = true;   
         delete mem_rsp;
       } else {
-        device_->mem_rsp_valid = 0;
+        device_->mem_rsp_valid = 0;   
       }
     }
 
-    // process memory requests
+    // process memory requests     (device -> mem)
     if (device_->mem_req_valid && running_) {
       uint64_t byte_addr = (device_->mem_req_addr * MEM_BLOCK_SIZE);
+      // 1. 写操作：
       if (device_->mem_req_rw) {
         auto byteen = device_->mem_req_byteen;
         auto data = VDataCast<uint8_t*, MEM_BLOCK_SIZE>::get(device_->mem_req_data);
-
+        
+        // 2. 如果地址落在IO_COUT_ADDR范围内，处理器将数据写入print_bufs_中对应core的stringstream对象，并在遇到换行符时将缓冲区内容打印到控制台。
         if (byte_addr >= uint64_t(IO_COUT_ADDR)
          && byte_addr < (uint64_t(IO_COUT_ADDR) + IO_COUT_SIZE)) {
           // process console output
@@ -519,15 +537,15 @@ private:
               (*ram_)[byte_addr + i] = data[i];
             }
           }
-
+          // 写操作也生成一个请求对象，便于模拟DRAM延迟
           auto mem_req = new mem_req_t();
           mem_req->tag   = device_->mem_req_tag;
           mem_req->addr  = byte_addr;
           mem_req->write = true;
-          mem_req->ready = true;
+          mem_req->ready = true;  // 写请求不需要等待RAM读数据，所以ready直接设置为true
 
-          // send dram request
-          dram_queue_.push(mem_req);
+          // send dram request   
+          dram_queue_.push(mem_req);  
         }
       } else {
         // process reads
@@ -535,9 +553,9 @@ private:
         mem_req->tag   = device_->mem_req_tag;
         mem_req->addr  = byte_addr;
         mem_req->write = false;
-        mem_req->ready = false;
-        ram_->read(mem_req->block.data(), byte_addr, MEM_BLOCK_SIZE);
-        pending_mem_reqs_.emplace_back(mem_req);
+        mem_req->ready = false;   // 读请求需要等待RAM读数据回来，所以ready初始设置为false。
+        ram_->read(mem_req->block.data(), byte_addr, MEM_BLOCK_SIZE);  // 仿真器中C++RAM是马上就把数据读出来了，但在真实的DRAM中是有延迟的，由dram模拟器完成延迟的模拟，mem_req->ready信号标志这一过程。
+        pending_mem_reqs_.emplace_back(mem_req);  // 待处理列表
 
         //printf("%0ld: [sim] MEM Rd Req: addr=0x%0lx, tag=0x%0lx\n", timestamp, byte_addr, device_->mem_req_tag);
 
@@ -546,7 +564,7 @@ private:
       }
     }
 
-    device_->mem_req_ready = running_;
+    device_->mem_req_ready = running_;    // 标志信号，执行run()函数后，才可以开始接受内存请求。
   }
 
 #endif
@@ -558,7 +576,7 @@ private:
   void dcr_bus_eval(bool clk) {
     if (!clk) {
       return;
-    }
+    }  
     if (device_->dcr_wr_valid) {
       device_->dcr_wr_valid = 0;
     }
@@ -575,28 +593,32 @@ private:
   typedef struct {
     Device* device;
     std::array<uint8_t, MEM_BLOCK_SIZE> block;
-    uint64_t addr;
-    uint64_t tag;
-    bool write;
-    bool ready;
-  } mem_req_t;
-
-  std::unordered_map<int, std::stringstream> print_bufs_;
-
+    uint64_t addr;  // 内存地址，单位是字节
+    uint64_t tag;   // 请求标签，标注的是请求！不是cache中的那个tag。
+    bool write;     
+    bool ready;     // 标志位，用于dram延迟模拟，表示请求是否已经准备好（对于读请求来说，ready表示数据已经从RAM读出来了；对于写请求来说，ready可以直接设置为true，因为不需要等待RAM读数据）
+  } mem_req_t;      // 访存数据包
+  
+  // 打印缓冲区，哈希表，key为每个core的id，value为用于存储该core的输出内容。
+  // 待处理的内存请求列表。     读事务在这里排队，等DRAM延迟模拟完成后，再从这里取出准备好的请求，发送读响应。
+  // DRAM请求队列，存储待发送到DRAM模拟器的内存请求。 读写事务都要进行DRAM延迟模拟。
+  std::unordered_map<int, std::stringstream> print_bufs_;  
   std::list<mem_req_t*> pending_mem_reqs_;
-
   std::queue<mem_req_t*> dram_queue_;
 
-  DramSim dram_sim_;
+  DramSim dram_sim_; // DRAM模拟器实例，只管延迟，不管数据。
 
-  Device* device_;
+  Device* device_;   // RTL实例
 
 #ifdef VCD_OUTPUT
-  VerilatedVcdC *tfp_;
+  VerilatedVcdC *tfp_;  
 #endif
 
-  RAM* ram_;
+  RAM* ram_;         // 实际的数据仓库，只管数据，不管延迟。
 
+  // 五个状态标志信号，实际可看作FSM，控制内存请求和响应的处理流程。
+  // mem_bus 只需要rd这一组
+  // axi_bus 需要rd和wr两组
   bool mem_rd_rsp_active_;
   bool mem_rd_rsp_ready_;
 
@@ -607,15 +629,14 @@ private:
 };
 
 ///////////////////////////////////////////////////////////////////////////////
-
 Processor::Processor()
-  : impl_(new Impl())
+  : impl_(new Impl())   
 {}
 
 Processor::~Processor() {
-  delete impl_;
+  delete impl_;   
 }
-
+// 将attach_ram、run和dcr_write函数的调用转发给Impl实例的相应函数
 void Processor::attach_ram(RAM* mem) {
   impl_->attach_ram(mem);
 }

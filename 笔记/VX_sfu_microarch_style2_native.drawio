@@ -1,0 +1,84 @@
+<mxfile host="65bd71144e">
+    <diagram id="sfu_arch" name="SFU Architecture">
+        <mxGraphModel dx="788" dy="721" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="827" pageHeight="1169" math="0" shadow="0">
+            <root>
+                <mxCell id="0"/>
+                <mxCell id="1" parent="0"/>
+                <mxCell id="dispatch_if" value="&lt;b&gt;dispatch_if&lt;/b&gt;&lt;br&gt;(valid, ready, data)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e3f2fd;strokeColor=#1e88e5;strokeWidth=2;fontFamily=Helvetica;fontColor=#0d47a1;fontSize=12;" parent="1" vertex="1">
+                    <mxGeometry x="314" y="40" width="200" height="50" as="geometry"/>
+                </mxCell>
+                <mxCell id="commit_if" value="&lt;b&gt;commit_if [ISSUE_WIDTH]&lt;/b&gt;&lt;br&gt;(valid, ready, data)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e3f2fd;strokeColor=#1e88e5;strokeWidth=2;fontFamily=Helvetica;fontColor=#0d47a1;fontSize=12;" parent="1" vertex="1">
+                    <mxGeometry x="314" y="600" width="200" height="50" as="geometry"/>
+                </mxCell>
+                <mxCell id="warp_ctl_if" value="&lt;b&gt;warp_ctl_if&lt;/b&gt;&lt;br&gt;(To Scheduler)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e3f2fd;strokeColor=#1e88e5;strokeWidth=2;fontFamily=Helvetica;fontColor=#0d47a1;fontSize=12;" parent="1" vertex="1">
+                    <mxGeometry x="20" y="270" width="100" height="40" as="geometry"/>
+                </mxCell>
+                <mxCell id="csr_ifs" value="&lt;b&gt;System CSR Interfaces&lt;/b&gt;&lt;br&gt;(sched_csr, commit_csr)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e3f2fd;strokeColor=#1e88e5;strokeWidth=2;fontFamily=Helvetica;fontColor=#0d47a1;fontSize=12;" parent="1" vertex="1">
+                    <mxGeometry x="720" y="260" width="150" height="60" as="geometry"/>
+                </mxCell>
+                <mxCell id="dispatch_unit" value="&lt;b&gt;VX_dispatch_unit&lt;/b&gt;&lt;br&gt;OUT_BUF = 1 (1 Cycle)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff3e0;strokeColor=#f57c00;strokeWidth=2;fontFamily=Helvetica;fontColor=#e65100;fontSize=12;" parent="1" vertex="1">
+                    <mxGeometry x="314" y="140" width="200" height="60" as="geometry"/>
+                </mxCell>
+                <mxCell id="wctl_unit" value="&lt;b&gt;VX_wctl_unit&lt;/b&gt;&lt;br&gt;Warp Control&lt;div&gt;(1 cycle)&lt;/div&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e8f5e9;strokeColor=#43a047;strokeWidth=2;fontFamily=Helvetica;fontColor=#1b5e20;fontSize=12;" parent="1" vertex="1">
+                    <mxGeometry x="150" y="260" width="160" height="60" as="geometry"/>
+                </mxCell>
+                <mxCell id="csr_unit" value="&lt;b&gt;VX_csr_unit&lt;/b&gt;&lt;br&gt;CSR Read/Write&lt;div&gt;（1 Cycle）&lt;/div&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fce4ec;strokeColor=#d81b60;strokeWidth=2;fontFamily=Helvetica;fontColor=#880e4f;fontSize=12;" parent="1" vertex="1">
+                    <mxGeometry x="518" y="260" width="160" height="60" as="geometry"/>
+                </mxCell>
+                <mxCell id="arbiter" value="&lt;b&gt;VX_stream_arb&lt;/b&gt;&lt;br&gt;ARBITER=&quot;R&quot; | OUT_BUF = 3&lt;br&gt;(1 Cycle)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e0f7fa;strokeColor=#00acc1;strokeWidth=2;fontFamily=Helvetica;fontColor=#006064;fontSize=12;" parent="1" vertex="1">
+                    <mxGeometry x="314" y="380" width="200" height="60" as="geometry"/>
+                </mxCell>
+                <mxCell id="gather" value="&lt;b&gt;VX_gather_unit&lt;/b&gt;&lt;br&gt;OUT_BUF = 3 (1 Cycle)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff3e0;strokeColor=#f57c00;strokeWidth=2;fontFamily=Helvetica;fontColor=#e65100;fontSize=12;" parent="1" vertex="1">
+                    <mxGeometry x="314" y="490" width="200" height="60" as="geometry"/>
+                </mxCell>
+                <mxCell id="e1" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeWidth=2;exitX=0.5;exitY=1;entryX=0.5;entryY=0;" parent="1" source="dispatch_if" target="dispatch_unit" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="e2" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeWidth=2;exitX=0.25;exitY=1;entryX=0.5;entryY=0;" parent="1" source="dispatch_unit" target="wctl_unit" edge="1">
+                    <mxGeometry relative="1" as="geometry">
+                        <Array as="points">
+                            <mxPoint x="364" y="220"/>
+                            <mxPoint x="230" y="220"/>
+                        </Array>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="e3" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeWidth=2;exitX=0.75;exitY=1;entryX=0.5;entryY=0;" parent="1" source="dispatch_unit" target="csr_unit" edge="1">
+                    <mxGeometry relative="1" as="geometry">
+                        <Array as="points">
+                            <mxPoint x="464" y="220"/>
+                            <mxPoint x="598" y="220"/>
+                        </Array>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="e4" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeWidth=2;exitX=0;exitY=0.5;entryX=1;entryY=0.5;" parent="1" source="wctl_unit" target="warp_ctl_if" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="e5" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeWidth=2;startArrow=classic;startFill=1;endArrow=classic;endFill=1;exitX=1;exitY=0.5;entryX=0;entryY=0.5;strokeColor=#d81b60;dashed=1;" parent="1" source="csr_unit" target="csr_ifs" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="e6" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeWidth=2;exitX=0.5;exitY=1;entryX=0.25;entryY=0;" parent="1" source="wctl_unit" target="arbiter" edge="1">
+                    <mxGeometry relative="1" as="geometry">
+                        <Array as="points">
+                            <mxPoint x="230" y="350"/>
+                            <mxPoint x="364" y="350"/>
+                        </Array>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="e7" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeWidth=2;exitX=0.5;exitY=1;entryX=0.75;entryY=0;" parent="1" source="csr_unit" target="arbiter" edge="1">
+                    <mxGeometry relative="1" as="geometry">
+                        <Array as="points">
+                            <mxPoint x="598" y="350"/>
+                            <mxPoint x="464" y="350"/>
+                        </Array>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="e8" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeWidth=2;exitX=0.5;exitY=1;entryX=0.5;entryY=0;" parent="1" source="arbiter" target="gather" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="e9" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeWidth=2;exitX=0.5;exitY=1;entryX=0.5;entryY=0;" parent="1" source="gather" target="commit_if" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+            </root>
+        </mxGraphModel>
+    </diagram>
+</mxfile>

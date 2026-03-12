@@ -1,4 +1,4 @@
-## 安装
+## 1、官方仓库安装
 
 **根据readme来；**
 
@@ -15,7 +15,7 @@
 
    2. 检查安装gcc 11
       ./ci/install_dependencies.sh
-   3. mkdir build；  使用下面那一句
+   3. mkdir build；  使用上面这句
       cd build
       ../configure --xlen=32 --tooldir=$HOME/tools
 
@@ -52,6 +52,10 @@
    3. 具体测试程序、trace、输出结果还未研究。
 3. 到这一步后建议阅读 docs/ 中的仿真文档
 4. 通过makefile 来理解掌握整个工程。
+
+## 2、个人仓库安装
+
+问题一：
 
 ## 子模块仿真分析
 

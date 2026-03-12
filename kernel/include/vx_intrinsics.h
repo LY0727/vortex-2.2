@@ -236,7 +236,9 @@ inline void vx_tmc_one() {
         ".insn r %0, 0, 0, x0, a0, x0" :: "i"(RISCV_CUSTOM0) : "a0"
     );
 }
-
+// pred 和 split 这里之所以有 pred_n 和 split_n 的版本，是为了支持正向谓词和反向谓词两种情况，满足不同的条件分支需求。 --- IGNORE ---
+// 硬件上是 is_neg信号； pred执行是 rd[0]位； split执行是 rs2[0]位。 从下面的封装中也可以看到这一点。
+// 硬件上需要这一个机制才能支持正向谓词和反向谓词两种情况。 
 // Set thread predicate
 inline void vx_pred(int condition, int thread_mask) {
     __asm__ volatile (".insn r %0, 5, 0, x0, %1, %2" :: "i"(RISCV_CUSTOM0), "r"(condition), "r"(thread_mask));

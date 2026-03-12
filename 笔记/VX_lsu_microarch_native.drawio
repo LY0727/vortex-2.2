@@ -1,0 +1,146 @@
+<mxfile host="65bd71144e">
+    <diagram id="lsu_microarch" name="VX_LSU_Microarch">
+        <mxGraphModel dx="1166" dy="1030" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1169" pageHeight="827" background="#ffffff" math="0" shadow="0">
+            <root>
+                <mxCell id="0"/>
+                <mxCell id="1" parent="0"/>
+                <mxCell id="box_lmem" value="VX_lmem_unit (内存域路由层)" style="rounded=1;whiteSpace=wrap;html=1;dashed=1;fillColor=none;strokeColor=#b85450;verticalAlign=top;fontStyle=1;fontSize=14;" parent="1" vertex="1">
+                    <mxGeometry x="650" y="80" width="380" height="560" as="geometry"/>
+                </mxCell>
+                <mxCell id="lmem_route" value="Global/Local 查表与分频&#xa;(is_addr_local 组合逻辑)" style="rhombus;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontStyle=1" parent="box_lmem" vertex="1">
+                    <mxGeometry x="110" y="60" width="180" height="80" as="geometry"/>
+                </mxCell>
+                <mxCell id="global_buf" value="req_global_buf&#xa;[SIZE=2, 1-cycle]" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" parent="box_lmem" vertex="1">
+                    <mxGeometry x="230" y="190" width="120" height="50" as="geometry"/>
+                </mxCell>
+                <mxCell id="local_buf" value="req_local_buf&#xa;[SIZE=0, 组合]" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;" parent="box_lmem" vertex="1">
+                    <mxGeometry x="40" y="190" width="120" height="50" as="geometry"/>
+                </mxCell>
+                <mxCell id="sram_block" value="VX_local_mem&#xa;(Shared Memory SRAM)&#xa;[OUT_BUF=3]" style="shape=cylinder3;boundedLbl=1;backgroundOutline=1;size=15;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontStyle=1" parent="box_lmem" vertex="1">
+                    <mxGeometry x="30" y="280" width="140" height="100" as="geometry"/>
+                </mxCell>
+                <mxCell id="rsp_arb" value="rsp_arb (汇合仲裁)&#xa;[OUT_BUF=1]" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" parent="box_lmem" vertex="1">
+                    <mxGeometry x="140" y="440" width="140" height="60" as="geometry"/>
+                </mxCell>
+                <mxCell id="e_route_g" parent="box_lmem" source="lmem_route" target="global_buf" edge="1">
+                    <mxGeometry relative="1" as="geometry">
+                        <mxPoint as="offset"/>
+                        <Array as="points">
+                            <mxPoint x="290" y="100"/>
+                        </Array>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="e_route_l" parent="box_lmem" source="lmem_route" target="local_buf" edge="1">
+                    <mxGeometry relative="1" as="geometry">
+                        <Array as="points">
+                            <mxPoint x="100" y="100"/>
+                        </Array>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="e_l_sram" parent="box_lmem" source="local_buf" target="sram_block" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="e_sram_arb" parent="box_lmem" source="sram_block" target="rsp_arb" edge="1">
+                    <mxGeometry relative="1" as="geometry">
+                        <Array as="points">
+                            <mxPoint x="100" y="470"/>
+                        </Array>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="box_slice" value="VX_lsu_slice (访存核心执行与调度层)" style="rounded=1;whiteSpace=wrap;html=1;dashed=1;fillColor=none;strokeColor=#82b366;verticalAlign=top;fontStyle=1;fontSize=14;" parent="1" vertex="1">
+                    <mxGeometry x="220" y="80" width="380" height="660" as="geometry"/>
+                </mxCell>
+                <mxCell id="agu" value="AGU 地址计算&#xa;(rs1 + offset)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;" parent="box_slice" vertex="1">
+                    <mxGeometry x="40" y="60" width="120" height="50" as="geometry"/>
+                </mxCell>
+                <mxCell id="fence_lock" value="Fence Lock逻辑&#xa;(检测no_pending_req)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;" parent="box_slice" vertex="1">
+                    <mxGeometry x="200" y="60" width="140" height="50" as="geometry"/>
+                </mxCell>
+                <mxCell id="class_fmt" value="地址分类(atype)与&#xa;ByteEn/对齐格式化" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;" parent="box_slice" vertex="1">
+                    <mxGeometry x="40" y="150" width="140" height="60" as="geometry"/>
+                </mxCell>
+                <mxCell id="tag_gen" value="TAG 生成与分配&#xa;VX_allocator" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;" parent="box_slice" vertex="1">
+                    <mxGeometry x="220" y="150" width="120" height="60" as="geometry"/>
+                </mxCell>
+                <mxCell id="mem_sched" value="VX_mem_scheduler&#xa;(Core Reqs &lt;-&gt; Mem Channels)&#xa;请求合并与乱序缓冲队列" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontStyle=1;" parent="box_slice" vertex="1">
+                    <mxGeometry x="40" y="270" width="300" height="80" as="geometry"/>
+                </mxCell>
+                <mxCell id="load_fmt" value="加载数据提取&#xa;(按Tag截取与符号扩展)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;" parent="box_slice" vertex="1">
+                    <mxGeometry x="90" y="420" width="200" height="60" as="geometry"/>
+                </mxCell>
+                <mxCell id="rsp_buf" value="rsp_buf (Elastic Buffer)&#xa;[SIZE=2, 1-cycle]" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" parent="box_slice" vertex="1">
+                    <mxGeometry x="90" y="540" width="200" height="60" as="geometry"/>
+                </mxCell>
+                <mxCell id="e_agu_fmt" style="edgeStyle=orthogonalEdgeStyle;" parent="box_slice" source="agu" target="class_fmt" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="e_fmt_sched" style="edgeStyle=orthogonalEdgeStyle;" parent="box_slice" source="class_fmt" target="mem_sched" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="e_tag_sched" style="edgeStyle=orthogonalEdgeStyle;" parent="box_slice" source="tag_gen" target="mem_sched" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="e_sched_load" style="edgeStyle=orthogonalEdgeStyle;" parent="box_slice" source="mem_sched" target="load_fmt" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="e_load_buf" style="edgeStyle=orthogonalEdgeStyle;" parent="box_slice" source="load_fmt" target="rsp_buf" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="in_execute" value="Execute IF&#xa;(来自 Dispatch_unit [1-cycle])" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontStyle=1;" parent="1" vertex="1">
+                    <mxGeometry x="20" y="240" width="160" height="60" as="geometry"/>
+                </mxCell>
+                <mxCell id="out_commit" value="Commit IF&#xa;(往 Gather_unit [3-cycle])" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontStyle=1;" parent="1" vertex="1">
+                    <mxGeometry x="20" y="620" width="160" height="60" as="geometry"/>
+                </mxCell>
+                <mxCell id="out_global" value="L1 D-Cache IF&#xa;(Global/IO Memory)" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;fontStyle=1;" parent="1" vertex="1">
+                    <mxGeometry x="1080" y="160" width="120" height="60" as="geometry"/>
+                </mxCell>
+                <mxCell id="e_in_1" parent="1" source="in_execute" target="agu" edge="1">
+                    <mxGeometry relative="1" as="geometry">
+                        <Array as="points">
+                            <mxPoint x="200" y="270"/>
+                            <mxPoint x="200" y="165"/>
+                        </Array>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="e_in_2" style="edgeStyle=orthogonalEdgeStyle;" parent="1" source="in_execute" target="fence_lock" edge="1">
+                    <mxGeometry relative="1" as="geometry">
+                        <Array as="points">
+                            <mxPoint x="100" y="110"/>
+                            <mxPoint x="480" y="110"/>
+                        </Array>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="e_sched_route" parent="1" source="mem_sched" target="lmem_route" edge="1">
+                    <mxGeometry relative="1" as="geometry">
+                        <Array as="points">
+                            <mxPoint x="600" y="390"/>
+                            <mxPoint x="600" y="180"/>
+                        </Array>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="e_g_out" style="edgeStyle=orthogonalEdgeStyle;" parent="1" source="global_buf" target="out_global" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="e_global_arb" parent="1" source="out_global" target="rsp_arb" edge="1">
+                    <mxGeometry relative="1" as="geometry">
+                        <Array as="points">
+                            <mxPoint x="1140" y="550"/>
+                            <mxPoint x="860" y="550"/>
+                        </Array>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="e_arb_sched" style="edgeStyle=orthogonalEdgeStyle;" parent="1" source="rsp_arb" target="mem_sched" edge="1">
+                    <mxGeometry relative="1" as="geometry">
+                        <Array as="points">
+                            <mxPoint x="530" y="550"/>
+                        </Array>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="e_buf_commit" parent="1" source="rsp_buf" target="out_commit" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+            </root>
+        </mxGraphModel>
+    </diagram>
+</mxfile>

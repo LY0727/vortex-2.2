@@ -17,7 +17,7 @@
 set -e
 
 LOCAL_REPOSITORY=/mnt/ssd2/lao/vortex/build/vortex-toolchain-prebuilt-master
-TOOLDIR=${TOOLDIR:=/mnt/ssd2/lao/tools}
+TOOLDIR=${TOOLDIR:=/mnt/ssd2/lao/vortex-tools}
 OSVERSION=${OSVERSION:=ubuntu/focal}
 
 # ubuntu/focal 

@@ -32,9 +32,9 @@ module VX_scoreboard import VX_gpu_pkg::*; #(
     `UNUSED_SPARAM (INSTANCE_ID)
     localparam DATAW = `UUID_WIDTH + `NUM_THREADS + `PC_BITS + `EX_BITS + `INST_OP_BITS + `INST_ARGS_BITS + (`NR_BITS * 4) + 1;
 
-    VX_ibuffer_if staging_if [PER_ISSUE_WARPS]();
-    reg [PER_ISSUE_WARPS-1:0] operands_ready;
-
+    VX_ibuffer_if staging_if [PER_ISSUE_WARPS](); // 每个warp一个深度为1的前向切割的skid buffer
+    reg [PER_ISSUE_WARPS-1:0] operands_ready;     // 注意参数，每一位对应一个warp，表示该warp的指令是否所有操作数都准备好了。
+//=========================================================================================
 `ifdef PERF_ENABLE
     reg [PER_ISSUE_WARPS-1:0][`NUM_EX_UNITS-1:0] perf_inuse_units_per_cycle;
     wire [`NUM_EX_UNITS-1:0] perf_units_per_cycle, perf_units_per_cycle_r;
@@ -98,7 +98,10 @@ module VX_scoreboard import VX_gpu_pkg::*; #(
         end
     end
 `endif
-
+//=======================================================================================
+    // 前向切割的skid buffer;  ibuffer发出到scoreboard的指令先进入这个buffer，scoreboard再从这个buffer取指令进行打分和发出。这样做的好处是：
+    // 1. 可以减少scoreboard的critical path，因为scoreboard不需要直接和ibuffer对接，ibuffer的输出可以先进入这个buffer，scoreboard从这个buffer取指令，这样scoreboard的ready信号就不需要直接反馈给ibuffer，可以有更多的时间来计算ready信号。
+    // 2. 可以避免scoreboard和ibuffer之间的combinational loop，因为scoreboard的ready信号不直接反馈给ibuffer，而是通过这个buffer来隔离。scoreboard的ready信号只需要反馈给这个buffer，而这个buffer的ready信号再反馈给ibuffer，这样就避免了scoreboard和ibuffer之间的直接反馈，减少了combinational loop的风险。
     for (genvar w = 0; w < PER_ISSUE_WARPS; ++w) begin
         VX_elastic_buffer #(
             .DATAW (DATAW),
@@ -114,19 +117,21 @@ module VX_scoreboard import VX_gpu_pkg::*; #(
             .ready_out(staging_if[w].ready)
         );
     end
-
+    // 核心的scoreboard逻辑：跟踪每个warp正在使用的寄存器，判断每条指令的操作数是否准备好，以及更新寄存器的使用状态。
+    // 每个warp一个独立的寄存器使用跟踪，这样可以并行地处理多个warp的指令，减少scoreboard的critical path。
+    // 每个warp跟踪一个32位的inuse_regs，表示32个寄存器是否正在被使用中。当一条指令进入staging_if时，根据指令的rd、rs1、rs2、rs3查询inuse_regs，判断操作数是否准备好，并更新operands_busy。当一条指令完成写回时，根据writeback_if的数据更新inuse_regs，释放对应的寄存器。
     for (genvar w = 0; w < PER_ISSUE_WARPS; ++w) begin
-        reg [`NUM_REGS-1:0] inuse_regs;
+        reg [`NUM_REGS-1:0] inuse_regs;  // 追踪每个寄存器是否正在被使用中，整数32，浮点32。
 
-        reg [3:0] operands_busy, operands_busy_n;
+        reg [3:0] operands_busy, operands_busy_n;  // 追踪当前指令的4个操作数（rd、rs1、rs2、rs3）是否正在被使用中。
 
-        wire ibuffer_fire = ibuffer_if[w].valid && ibuffer_if[w].ready;
+        wire ibuffer_fire = ibuffer_if[w].valid && ibuffer_if[w].ready; // 这是ibuffer送指令到暂存区
 
-        wire staging_fire = staging_if[w].valid && staging_if[w].ready;
+        wire staging_fire = staging_if[w].valid && staging_if[w].ready; // 这是暂存区的指令被scoreboard发出去了
 
         wire writeback_fire = writeback_if.valid
                            && (writeback_if.data.wis == ISSUE_WIS_W'(w))
-                           && writeback_if.data.eop;
+                           && writeback_if.data.eop;     // eop信号是预备了SIMD迭代执行的逻辑，但目前没用。
 
     `ifdef PERF_ENABLE
         reg [`NUM_REGS-1:0][`EX_WIDTH-1:0] inuse_units;
@@ -163,7 +168,11 @@ module VX_scoreboard import VX_gpu_pkg::*; #(
             end
         end
     `endif
-
+        // 当前指令操作数就绪情况更新逻辑。 
+        // 1. ibuffer发出新指令：operands_busy_n 更新为该指令的操作数寄存器的 inuse_regs 状态。
+        // 2. writeback发出指令完成信号 && ibuffer发出新指令:  写回的RD寄存器的 inuse_regs 状态更新到 operands_busy_n 中对应的操作数位上，前提是写回的寄存器和当前指令的操作数寄存器匹配。
+        // 3. writeback发出指令完成信号 && 没有ibuffer发出新指令:  写回的RD寄存器的 inuse_regs 状态更新到 operands_busy_n 中对应的操作数位上，前提是写回的寄存器和当前暂存区指令的操作数寄存器匹配。
+        // 4. staging_if发出指令 && 该指令需要写回寄存器:  将暂存区指令的RD寄存器标记为正在使用中，前提是暂存区指令的RD寄存器和当前指令的操作数寄存器匹配。
         always @(*) begin
             operands_busy_n = operands_busy;
             if (ibuffer_fire) begin
@@ -218,14 +227,16 @@ module VX_scoreboard import VX_gpu_pkg::*; #(
                 end
             end
         end
-
+        // 寄存器状态更新逻辑
         always @(posedge clk) begin
             if (reset) begin
                 inuse_regs <= '0;
             end else begin
+                // 后面的流水线算完并写回数据了，对应寄存器解除占用状态。
                 if (writeback_fire) begin
                     inuse_regs[writeback_if.data.rd] <= 0;
                 end
+                // 当这条暂存区的指令被发射出去了，并且它确实要写回寄存器(wb==1)，就把目的寄存器标记为"忙碌"！
                 if (staging_fire && staging_if[w].data.wb) begin
                     inuse_regs[staging_if[w].data.rd] <= 1;
                 end
@@ -241,7 +252,7 @@ module VX_scoreboard import VX_gpu_pkg::*; #(
             end
         `endif
         end
-
+//============================================================================================
     `ifdef SIMULATION
         reg [31:0] timeout_ctr;
 
@@ -271,7 +282,7 @@ module VX_scoreboard import VX_gpu_pkg::*; #(
             ("%t: *** %s invalid writeback register: wid=%0d, PC=0x%0h, tmask=%b, rd=%0d (#%0d)",
                 $time, INSTANCE_ID, w, {writeback_if.data.PC, 1'b0}, writeback_if.data.tmask, writeback_if.data.rd, writeback_if.data.uuid));
     `endif
-
+//============================================================================================
     end
 
     wire [PER_ISSUE_WARPS-1:0] arb_valid_in;
@@ -279,9 +290,9 @@ module VX_scoreboard import VX_gpu_pkg::*; #(
     wire [PER_ISSUE_WARPS-1:0] arb_ready_in;
 
     for (genvar w = 0; w < PER_ISSUE_WARPS; ++w) begin
-        assign arb_valid_in[w] = staging_if[w].valid && operands_ready[w];
+        assign arb_valid_in[w] = staging_if[w].valid && operands_ready[w];  // 暂存区有数据 && 操作数都已有效
         assign arb_data_in[w] = staging_if[w].data;
-        assign staging_if[w].ready = arb_ready_in[w] && operands_ready[w];
+        assign staging_if[w].ready = arb_ready_in[w] && operands_ready[w];  // 仲裁器准备好了接受 && 操作数都已有效
     end
 
     `RESET_RELAY (arb_reset, reset);
@@ -289,7 +300,7 @@ module VX_scoreboard import VX_gpu_pkg::*; #(
     VX_stream_arb #(
         .NUM_INPUTS (PER_ISSUE_WARPS),
         .DATAW      (DATAW),
-        .ARBITER    ("F"),
+        .ARBITER    ("F"),  // 公平仲裁，轮流给每个warp发射指令，避免某个warp长期得不到调度。
         .LUTRAM     (1),
         .OUT_BUF    (4) // using 2-cycle EB for area reduction
     ) out_arb (

@@ -23,7 +23,7 @@ module VX_dispatch_unit import VX_gpu_pkg::*; #(
     input  wire             reset,
 
     // inputs
-    VX_dispatch_if.slave    dispatch_if [`ISSUE_WIDTH],
+    VX_dispatch_if.slave    dispatch_if [`ISSUE_WIDTH],  // 每个issue slot对应一个dispatch接口，发出指令到dispatch_unit。dispatch_unit根据指令的ex_type将指令分发到不同的执行单元接口上。
 
     // outputs
     VX_execute_if.master    execute_if [BLOCK_SIZE]
@@ -88,7 +88,7 @@ module VX_dispatch_unit import VX_gpu_pkg::*; #(
         `RESET_RELAY_EN (block_reset, reset, (BLOCK_SIZE > 1));
 
         wire valid_p, ready_p;
-
+        // 拆包处理逻辑
         if (`NUM_THREADS != NUM_LANES) begin
             reg [NUM_PACKETS-1:0] sent_mask_p;
             wire [PID_WIDTH-1:0] start_p_n, start_p, end_p;
@@ -193,7 +193,7 @@ module VX_dispatch_unit import VX_gpu_pkg::*; #(
                 assign block_ready[block_idx] = ready_p && block_enable;
             end
             assign block_done[block_idx] = ~dispatch_valid[issue_idx] || fire_eop;
-        end else begin
+        end else begin    // 不拆包处理逻辑
             assign valid_p = dispatch_valid[issue_idx];
             assign block_tmask[block_idx] = dispatch_data[issue_idx][DATA_TMASK_OFF +: `NUM_THREADS];
             assign block_regs[block_idx][0] = dispatch_data[issue_idx][DATA_REGS_OFF + 2 * `NUM_THREADS * `XLEN +: `NUM_THREADS * `XLEN];

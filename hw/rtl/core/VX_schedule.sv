@@ -25,9 +25,9 @@ module VX_schedule import VX_gpu_pkg::*; #(
 `endif
 
     // configuration
-    input base_dcrs_t       base_dcrs,
+    input base_dcrs_t       base_dcrs,        
 
-    // inputsdecode_if
+    // inputs decode_if
     VX_warp_ctl_if.slave    warp_ctl_if,
     VX_branch_ctl_if.slave  branch_ctl_if [`NUM_ALU_BLOCKS],
     VX_decode_sched_if.slave decode_sched_if,
@@ -60,35 +60,35 @@ module VX_schedule import VX_gpu_pkg::*; #(
 
     // split/join
     wire                    join_valid;
-    wire                    join_is_dvg;
-    wire                    join_is_else;
+    wire                    join_is_dvg;    // join指令对应的分支是否发生了分支发散（divergence）
+    wire                    join_is_else;   // join指令对应的分支是否是else分支
     wire [`NW_WIDTH-1:0]    join_wid;
     wire [`NUM_THREADS-1:0] join_tmask;
     wire [`PC_BITS-1:0]     join_pc;
 
     reg [`PERF_CTR_BITS-1:0] cycles;
 
-    reg [`NUM_WARPS-1:0][`UUID_WIDTH-1:0] issued_instrs;
+    reg [`NUM_WARPS-1:0][`UUID_WIDTH-1:0] issued_instrs; 
 
     wire schedule_fire = schedule_valid && schedule_ready;
-    wire schedule_if_fire = schedule_if.valid && schedule_if.ready;
+    wire schedule_if_fire = schedule_if.valid && schedule_if.ready;  
 
     // branch
     wire [`NUM_ALU_BLOCKS-1:0]                  branch_valid;
     wire [`NUM_ALU_BLOCKS-1:0][`NW_WIDTH-1:0]   branch_wid;
-    wire [`NUM_ALU_BLOCKS-1:0]                  branch_taken;
-    wire [`NUM_ALU_BLOCKS-1:0][`PC_BITS-1:0]    branch_dest;
+    wire [`NUM_ALU_BLOCKS-1:0]                  branch_taken;// 这个taken信号是branch指令本身的结果，
+    wire [`NUM_ALU_BLOCKS-1:0][`PC_BITS-1:0]    branch_dest; // 这个dest是绝对地址，由branch unit计算得到的分支目标地址
     for (genvar i = 0; i < `NUM_ALU_BLOCKS; ++i) begin
         assign branch_valid[i] = branch_ctl_if[i].valid;
         assign branch_wid[i]   = branch_ctl_if[i].wid;
-        assign branch_taken[i] = branch_ctl_if[i].taken;
-        assign branch_dest[i]  = branch_ctl_if[i].dest;
+        assign branch_taken[i] = branch_ctl_if[i].taken;  
+        assign branch_dest[i]  = branch_ctl_if[i].dest;   
     end
 
     // barriers
-    reg [`NUM_BARRIERS-1:0][`NUM_WARPS-1:0] barrier_masks, barrier_masks_n;
-    reg [`NUM_BARRIERS-1:0][`NW_WIDTH-1:0] barrier_ctrs, barrier_ctrs_n;
-    reg [`NUM_WARPS-1:0] barrier_stalls, barrier_stalls_n;
+    reg [`NUM_BARRIERS-1:0][`NUM_WARPS-1:0] barrier_masks, barrier_masks_n; // 记录每个barrier已经到达的warp
+    reg [`NUM_BARRIERS-1:0][`NW_WIDTH-1:0] barrier_ctrs, barrier_ctrs_n;    // 到达barrier的warp数量
+    reg [`NUM_WARPS-1:0] barrier_stalls, barrier_stalls_n;                  // stall 控制位，为1表示对应的warp正在等待barrier
     reg [`NUM_WARPS-1:0] curr_barrier_mask_p1;
 `ifdef GBAR_ENABLE
     reg gbar_req_valid;
@@ -98,8 +98,8 @@ module VX_schedule import VX_gpu_pkg::*; #(
 
     // wspawn
     wspawn_t wspawn;
-    reg [`NW_WIDTH-1:0] wspawn_wid;
-    reg is_single_warp;
+    reg [`NW_WIDTH-1:0] wspawn_wid;  // 接收来自wspawn指令的wid，等到下一个周期真正发出wspawn信号时使用
+    reg is_single_warp;              // 只有一个warp活跃时为1
 
     wire [`CLOG2(`NUM_WARPS+1)-1:0] active_warps_cnt;
     `POP_COUNT(active_warps_cnt, active_warps);
@@ -113,7 +113,7 @@ module VX_schedule import VX_gpu_pkg::*; #(
         barrier_stalls_n= barrier_stalls;
         warp_pcs_n      = warp_pcs;
 
-        // wspawn handling
+        // wspawn handling  激活warp，设置每个warp的线程掩码和PC，解锁warp
         if (wspawn.valid && is_single_warp) begin
             active_warps_n |= wspawn.wmask;
             for (integer i = 0; i < `NUM_WARPS; ++i) begin
@@ -125,14 +125,14 @@ module VX_schedule import VX_gpu_pkg::*; #(
             stalled_warps_n[wspawn_wid] = 0; // unlock warp
         end
 
-        // TMC handling
+        // TMC handling   直接设置该warp的线程掩码，解锁warp
         if (warp_ctl_if.valid && warp_ctl_if.tmc.valid) begin
             active_warps_n[warp_ctl_if.wid]  = (warp_ctl_if.tmc.tmask != 0);
             thread_masks_n[warp_ctl_if.wid]  = warp_ctl_if.tmc.tmask;
             stalled_warps_n[warp_ctl_if.wid] = 0; // unlock warp
         end
 
-        // split handling
+        // split handling  如果发生了分支发散，则设置该warp的tmask=then_tmask; 如果没有发散，自然就不需要设置；解锁warp
         if (warp_ctl_if.valid && warp_ctl_if.split.valid) begin
             if (warp_ctl_if.split.is_dvg) begin
                 thread_masks_n[warp_ctl_if.wid] = warp_ctl_if.split.then_tmask;
@@ -140,7 +140,7 @@ module VX_schedule import VX_gpu_pkg::*; #(
             stalled_warps_n[warp_ctl_if.wid] = 0; // unlock warp
         end
 
-        // join handling
+        // join handling   
         if (join_valid) begin
             if (join_is_dvg) begin
                 if (join_is_else) begin
@@ -153,10 +153,10 @@ module VX_schedule import VX_gpu_pkg::*; #(
 
         // barrier handling
         curr_barrier_mask_p1 = barrier_masks[warp_ctl_if.barrier.id];
-        curr_barrier_mask_p1[warp_ctl_if.wid] = 1;
+        curr_barrier_mask_p1[warp_ctl_if.wid] = 1;   // 本次到达的warp，加上之前已经到达的warp，组成新的mask
         if (warp_ctl_if.valid && warp_ctl_if.barrier.valid) begin
             if (~warp_ctl_if.barrier.is_noop) begin
-                if (~warp_ctl_if.barrier.is_global
+                if (~warp_ctl_if.barrier.is_global 
                  && (barrier_ctrs[warp_ctl_if.barrier.id] == `NW_WIDTH'(warp_ctl_if.barrier.size_m1))) begin
                     barrier_ctrs_n[warp_ctl_if.barrier.id] = '0; // reset barrier counter
                     barrier_masks_n[warp_ctl_if.barrier.id] = '0; // reset barrier mask
@@ -167,7 +167,7 @@ module VX_schedule import VX_gpu_pkg::*; #(
                     barrier_masks_n[warp_ctl_if.barrier.id] = curr_barrier_mask_p1;
                 end
             end else begin
-                stalled_warps_n[warp_ctl_if.wid] = 0; // unlock warp
+                stalled_warps_n[warp_ctl_if.wid] = 0; // unlock warp； 虽然是bar指令，但是不需要等待，直接解锁warp继续执行后续指令
             end
         end
     `ifdef GBAR_ENABLE
@@ -178,7 +178,7 @@ module VX_schedule import VX_gpu_pkg::*; #(
         end
     `endif
 
-        // Branch handling
+        // Branch handling    根据branch指令的结果，更新该warp的PC为分支目标地址，解锁warp
         for (integer i = 0; i < `NUM_ALU_BLOCKS; ++i) begin
             if (branch_valid[i]) begin
                 if (branch_taken[i]) begin
@@ -188,7 +188,7 @@ module VX_schedule import VX_gpu_pkg::*; #(
             end
         end
 
-        // decode unlock
+        // decode unlock  如果decode阶段发出的指令不是wstall指令（哪些是wstall指令：），就解锁对应的warp
         if (decode_sched_if.valid && ~decode_sched_if.is_wstall) begin
             stalled_warps_n[decode_sched_if.wid] = 0;
         end
@@ -198,12 +198,13 @@ module VX_schedule import VX_gpu_pkg::*; #(
             stalled_warps_n[sched_csr_if.unlock_wid] = 0;
         end
 
-        // stall the warp until decode stage
+        // stall the warp until decode stage     
         if (schedule_fire) begin
             stalled_warps_n[schedule_wid] = 1;
         end
 
-        // advance PC
+        // advance PC  // 这里应该是RISCV考虑指令长度是16/32位，所以每条指令的PC至少增加2；如果是分支指令，PC在branch handling里已经被更新了，这里就不需要再增加了
+        // 可以看到，sche内调度后就马上stall， 但是PC更新应该以fetch拿到sche包为准。
         if (schedule_if_fire) begin
             warp_pcs_n[schedule_if.data.wid] = schedule_if.data.PC + `PC_BITS'(2);
         end
@@ -228,19 +229,19 @@ module VX_schedule import VX_gpu_pkg::*; #(
             wspawn.valid    <=  0;
 
             // activate first warp
-            warp_pcs[0]     <= base_dcrs.startup_addr[1 +: `PC_BITS];
+            warp_pcs[0]     <= base_dcrs.startup_addr[1 +: `PC_BITS];   // 这为什么是 1 +: ?； RISCV指令特性，LSB位不需要考虑。
             active_warps[0] <= 1;
             thread_masks[0][0] <= 1;
             is_single_warp  <= 1;
         end else begin
-            active_warps   <= active_warps_n;
+            active_warps   <= active_warps_n;   
             stalled_warps  <= stalled_warps_n;
             thread_masks   <= thread_masks_n;
             warp_pcs       <= warp_pcs_n;
             barrier_masks  <= barrier_masks_n;
             barrier_ctrs   <= barrier_ctrs_n;
             barrier_stalls <= barrier_stalls_n;
-            is_single_warp <= (active_warps_cnt == $bits(active_warps_cnt)'(1));
+            is_single_warp <= (active_warps_cnt == $bits(active_warps_cnt)'(1));  // 只有一个warp活跃
 
             // wspawn handling
             if (warp_ctl_if.valid && warp_ctl_if.wspawn.valid) begin
@@ -271,7 +272,7 @@ module VX_schedule import VX_gpu_pkg::*; #(
             if (schedule_if_fire) begin
                 issued_instrs[schedule_if.data.wid] <= issued_instrs[schedule_if.data.wid] + `UUID_WIDTH'(1);
             end
-
+            // performance counter
             if (busy) begin
                 cycles <= cycles + 1;
             end
@@ -298,11 +299,11 @@ module VX_schedule import VX_gpu_pkg::*; #(
         .reset      (split_join_reset),
         .valid      (warp_ctl_if.valid),
         .wid        (warp_ctl_if.wid),
-        .split      (warp_ctl_if.split),
-        .sjoin      (warp_ctl_if.sjoin),
+        .split      (warp_ctl_if.split), // split_t
+        .sjoin      (warp_ctl_if.sjoin), // join_t
         .join_valid (join_valid),
         .join_is_dvg(join_is_dvg),
-        .join_is_else(join_is_else),
+        .join_is_else(join_is_else),   
         .join_wid   (join_wid),
         .join_tmask (join_tmask),
         .join_pc    (join_pc),
@@ -311,9 +312,9 @@ module VX_schedule import VX_gpu_pkg::*; #(
     );
 
     // schedule the next ready warp
-
+    // 活跃的未被阻塞的warps
     wire [`NUM_WARPS-1:0] ready_warps = active_warps & ~stalled_warps;
-
+    // 前导零计数器，也就是低位优先的固定优先级仲裁。 因为只要调度有效，这个warp马上就会被stall，所以实际类似循环（但其实没有严格轮询，因为最快的情况在译码后就可以unlock，warp较多的情况下，它比还未轮询到的warp优先级更高）
     VX_lzc #(
         .N (`NUM_WARPS),
         .REVERSE (1)
@@ -322,7 +323,7 @@ module VX_schedule import VX_gpu_pkg::*; #(
         .data_out  (schedule_wid),
         .valid_out (schedule_valid)
     );
-
+    //  schedule_data  这里莫名奇妙，没有任何作用，像是遗留代码。最新仓库里面依然有？为了波形找信号嘛？
     wire [`NUM_WARPS-1:0][(`NUM_THREADS + `PC_BITS)-1:0] schedule_data;
     for (genvar i = 0; i < `NUM_WARPS; ++i) begin
         assign schedule_data[i] = {thread_masks[i], warp_pcs[i]};
@@ -333,6 +334,10 @@ module VX_schedule import VX_gpu_pkg::*; #(
         schedule_data[schedule_wid][(`NUM_THREADS + `PC_BITS)-5:0]
     };
 
+    // 注意到 uuid信号，完全是为了方便开发调试，实际硬件不用在意。 它的生成方式是：
+    // 如果定义了SV_DPI，就调用dpi_uuid_gen这个DPI函数来生成uuid；
+    // 如果没有定义SV_DPI，就根据CORE_ID、schedule_wid和schedule_pc组合成一个uuid。
+    // 无论哪种方式，uuid都是为了唯一标识每条指令的，方便在仿真波形中观察和调试。
 `ifndef NDEBUG
     localparam GNW_WIDTH = `LOG2UP(`NUM_CLUSTERS * `NUM_CORES * `NUM_WARPS);
     reg [`UUID_WIDTH-1:0] instr_uuid;
@@ -352,9 +357,9 @@ module VX_schedule import VX_gpu_pkg::*; #(
     end
 `endif
 `else
-    wire [`UUID_WIDTH-1:0] instr_uuid = '0;
+    wire [`UUID_WIDTH-1:0] instr_uuid = '0;  // 在非调试模式下，uuid位宽为1，赋值为0.
 `endif
-
+    //  这里最后硬件是：一个带有组合逻辑前馈的单极D触发器打拍器。 其实就是前向切割寄存器。
     VX_elastic_buffer #(
         .DATAW (`NUM_THREADS + `PC_BITS + `NW_WIDTH)
     ) out_buf (
@@ -371,7 +376,7 @@ module VX_schedule import VX_gpu_pkg::*; #(
     assign schedule_if.data.uuid = instr_uuid;
 
     // Track pending instructions per warp
-
+    // 这里的pending指的是已经被调度出去但还没有提交的指令。 这个计数器在schedule阶段增加，在commit阶段减少。
     reg [`NUM_WARPS-1:0] per_warp_incr;
     always @(*) begin
         per_warp_incr = 0;
@@ -381,10 +386,11 @@ module VX_schedule import VX_gpu_pkg::*; #(
     end
 
     wire [`NUM_WARPS-1:0] pending_warp_empty;
-    wire [`NUM_WARPS-1:0] pending_warp_alm_empty;
+    wire [`NUM_WARPS-1:0] pending_warp_alm_empty;   // 这里的almost empty是指只有1条pending指令了。 这个信号在调度时可以用来判断该warp是否即将没有pending指令了，从而可以优先调度它，以避免出现某些warp长时间没有机会被调度的情况。
 
     `RESET_RELAY_EX (pending_instr_reset, reset, `NUM_WARPS, `MAX_FANOUT);
-
+    // 这里为每个warp维护一个计数器，记录该warp已经调度出去但还没有提交的指令数量。 
+    // 调度时+1；commit提交时-1；当计数器为0时，表示该warp没有pending指令。
     for (genvar i = 0; i < `NUM_WARPS; ++i) begin
 
         VX_pending_size #(
@@ -405,12 +411,14 @@ module VX_schedule import VX_gpu_pkg::*; #(
 
     assign sched_csr_if.alm_empty = pending_warp_alm_empty[sched_csr_if.alm_empty_wid];
 
-    wire no_pending_instr = (& pending_warp_empty);
+    wire no_pending_instr = (& pending_warp_empty); // 所有warp的pending计数器都为0，说明没有任何warp有pending指令了。
 
-    `BUFFER_EX(busy, (active_warps != 0 || ~no_pending_instr), 1'b1, 1);
+    `BUFFER_EX(busy, (active_warps != 0 || ~no_pending_instr), 1'b1, 1); // busy信号表示调度器是否有活跃的warp或者有pending指令，如果没有活跃的warp且没有pending指令了，就认为调度器空闲了。
 
-    // export CSRs
-    assign sched_csr_if.cycles = cycles;
+    // export CSRs； 
+    //  这里的CSR接口主要是为了提供一些调试和性能监控的功能，比如周期计数器、活跃warp数量、线程掩码等。 
+    //  实际上，这些信息在硬件中是很容易获取的，直接通过寄存器或者组合逻辑就可以了，不需要复杂的CSR机制。
+    assign sched_csr_if.cycles = cycles;    
     assign sched_csr_if.active_warps = active_warps;
     assign sched_csr_if.thread_masks = thread_masks;
 

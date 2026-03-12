@@ -16,7 +16,7 @@ VORTEX_HOME ?= @VORTEX_HOME@
 XLEN ?= @XLEN@
 # 依赖工具的按照路径
 TOOLDIR ?= @TOOLDIR@
-# 依赖工具的版本，使用官方提供的  toolchain_install.sh  按照工具链时使用，后续无用；
+# 依赖工具的版本，使用官方提供的  toolchain_install.sh  安装工具链时使用，后续无用；
 # 我进行本地安装没有使用这个
 OSVERSION ?= @OSVERSION@
 # 安装路径

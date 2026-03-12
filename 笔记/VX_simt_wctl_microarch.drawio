@@ -1,0 +1,172 @@
+<mxfile host="65bd71144e">
+    <diagram id="simt_control_flow" name="SIMT Divergence Control Flow">
+        <mxGraphModel dx="1400" dy="1000" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1400" pageHeight="900" math="0" shadow="0">
+            <root>
+                <mxCell id="0"/>
+                <mxCell id="1" parent="0"/>
+                
+                <!-- Main Backgrounds -->
+                <mxCell id="bg_sched" value="Schedule Stage (Front-end)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff8e1;strokeColor=#fbc02d;strokeWidth=2;dashed=1;verticalAlign=top;spacingTop=10;fontFamily=Helvetica;fontSize=18;fontStyle=1;fontColor=#f57f17;arcSize=2;" parent="1" vertex="1">
+                    <mxGeometry x="40" y="80" width="300" height="700" as="geometry"/>
+                </mxCell>
+
+                <mxCell id="bg_exe" value="Execute Stage: VX_wctl_unit" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e0f7fa;strokeColor=#00acc1;strokeWidth=2;dashed=1;verticalAlign=top;spacingTop=10;fontFamily=Helvetica;fontSize=18;fontStyle=1;fontColor=#006064;arcSize=2;" parent="1" vertex="1">
+                    <mxGeometry x="380" y="80" width="560" height="700" as="geometry"/>
+                </mxCell>
+
+                <mxCell id="bg_cmt" value="Commit &amp;amp; GPR State" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fce4ec;strokeColor=#d81b60;strokeWidth=2;dashed=1;verticalAlign=top;spacingTop=10;fontFamily=Helvetica;fontSize=18;fontStyle=1;fontColor=#880e4f;arcSize=2;" parent="1" vertex="1">
+                    <mxGeometry x="980" y="80" width="280" height="700" as="geometry"/>
+                </mxCell>
+
+                <!-- ==================== Schedule Stage ==================== -->
+                <mxCell id="ipdom_stack" value="&lt;b&gt;VX_ipdom_stack&lt;/b&gt;&lt;br&gt;&lt;br&gt;&lt;i&gt;Divergence Stack&lt;/i&gt;&lt;br&gt;(Depth: NUM_THREADS-1)&lt;br&gt;&lt;br&gt;Stores: &lt;b&gt;ntaken_tmask, PC&lt;/b&gt;" style="shape=cylinder3;whiteSpace=wrap;html=1;boundedLbl=1;backgroundOutline=1;size=15;fillColor=#ffe0b2;strokeColor=#f57c00;strokeWidth=2;fontFamily=Helvetica;fontColor=#e65100;fontSize=14;" parent="1" vertex="1">
+                    <mxGeometry x="90" y="320" width="200" height="150" as="geometry"/>
+                </mxCell>
+                
+                <mxCell id="active_state" value="&lt;b&gt;Active Warp State&lt;/b&gt;&lt;br&gt;Current tmask &amp;amp; PC" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#fff3e0;strokeColor=#e65100;strokeWidth=2;fontFamily=Helvetica;fontColor=#d84315;fontSize=14;" parent="1" vertex="1">
+                    <mxGeometry x="90" y="550" width="200" height="60" as="geometry"/>
+                </mxCell>
+
+                <!-- ==================== Execute Stage ==================== -->
+                
+                <mxCell id="exe_in" value="&lt;b&gt;execute_if.data&lt;/b&gt;&lt;br&gt;op_type, rs1_data, tmask, PC" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#b2ebf2;strokeColor=#0097a7;strokeWidth=2;fontFamily=Helvetica;fontColor=#006064;fontSize=14;" parent="1" vertex="1">
+                    <mxGeometry x="510" y="130" width="300" height="40" as="geometry"/>
+                </mxCell>
+
+                <!-- SPLIT Logic -->
+                <mxCell id="mask_calc" value="&lt;b&gt;Branch Condition Check&lt;/b&gt;&lt;br&gt;&lt;i&gt;Evaluate each thread's taken&lt;/i&gt;&lt;br&gt;then = taken &amp;amp; current_tmask&lt;br&gt;else = ~taken &amp;amp; current_tmask" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#e1f5fe;strokeColor=#00838f;strokeWidth=2;fontFamily=Helvetica;fontColor=#004d40;fontSize=12;" parent="1" vertex="1">
+                    <mxGeometry x="400" y="220" width="220" height="80" as="geometry"/>
+                </mxCell>
+
+                <mxCell id="opt_pop" value="&lt;b&gt;Hardware Optimization&lt;/b&gt;&lt;br&gt;&lt;i&gt;POP_COUNT&lt;/i&gt;&lt;br&gt;优先执行线程数多的一条分支&lt;br&gt;then_cnt &amp;gt;= else_cnt ?" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#e1f5fe;strokeColor=#00838f;strokeWidth=2;fontFamily=Helvetica;fontColor=#004d40;fontSize=12;" parent="1" vertex="1">
+                    <mxGeometry x="400" y="340" width="220" height="80" as="geometry"/>
+                </mxCell>
+
+                <mxCell id="split_pkg" value="&lt;b&gt;SPLIT Instruction&lt;/b&gt;&lt;br&gt;Assemble split_t packet:&lt;br&gt;taken_tmask, ntaken_tmask&lt;br&gt;next_pc = PC + 4" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#b2dfdb;strokeColor=#00695c;strokeWidth=2;fontFamily=Helvetica;fontColor=#004d40;fontSize=12;" parent="1" vertex="1">
+                    <mxGeometry x="400" y="460" width="220" height="80" as="geometry"/>
+                </mxCell>
+
+                <!-- JOIN Logic -->
+                <mxCell id="join_pkg" value="&lt;b&gt;JOIN Instruction&lt;/b&gt;&lt;br&gt;Assemble join_t packet:&lt;br&gt;stack_ptr = rs1_data (from GPR)" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#b2dfdb;strokeColor=#00695c;strokeWidth=2;fontFamily=Helvetica;fontColor=#004d40;fontSize=12;" parent="1" vertex="1">
+                    <mxGeometry x="700" y="460" width="220" height="80" as="geometry"/>
+                </mxCell>
+
+                <!-- Buffer -->
+                <mxCell id="rsp_buf" value="&lt;b&gt;VX_elastic_buffer (rsp_buf)&lt;/b&gt;&lt;br&gt;2-cycle latency to sync with IPDOM stack pointer allocation" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e0f2f1;strokeColor=#00796b;strokeWidth=2;fontFamily=Helvetica;fontColor=#004d40;fontSize=14;" parent="1" vertex="1">
+                    <mxGeometry x="450" y="600" width="420" height="60" as="geometry"/>
+                </mxCell>
+                <mxCell id="rd_logic" value="assign data = dvstack_ptr" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontFamily=Helvetica;fontSize=12;fontColor=#006064;" parent="1" vertex="1">
+                    <mxGeometry x="710" y="660" width="160" height="20" as="geometry"/>
+                </mxCell>
+
+                <!-- ==================== Commit / Register ==================== -->
+                <mxCell id="cmt_if" value="&lt;b&gt;commit_if&lt;/b&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8bbd0;strokeColor=#c2185b;strokeWidth=2;fontFamily=Helvetica;fontColor=#880e4f;fontSize=14;" parent="1" vertex="1">
+                    <mxGeometry x="1000" y="600" width="240" height="60" as="geometry"/>
+                </mxCell>
+
+                <mxCell id="gpr" value="&lt;b&gt;Integer Register File (GPR)&lt;/b&gt;&lt;br&gt;&lt;br&gt;Store stack pointer into &lt;b&gt;rd&lt;/b&gt;&lt;br&gt;...&lt;br&gt;Read stack pointer from &lt;b&gt;rs1&lt;/b&gt;" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#f8bbd0;strokeColor=#c2185b;strokeWidth=2;fontFamily=Helvetica;fontColor=#880e4f;fontSize=14;" parent="1" vertex="1">
+                    <mxGeometry x="1020" y="320" width="200" height="120" as="geometry"/>
+                </mxCell>
+
+                <!-- ==================== EDGES / DATA FLOW ==================== -->
+
+                <!-- Input to logic -->
+                <mxCell id="e_in_split" style="edgeStyle=orthogonalEdgeStyle;html=1;entryX=0.5;entryY=0;strokeWidth=2;strokeColor=#0097a7;" edge="1" parent="1" source="exe_in" target="mask_calc">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="e_in_join" style="edgeStyle=orthogonalEdgeStyle;html=1;entryX=0.5;entryY=0;strokeWidth=2;strokeColor=#0097a7;dashed=1;" edge="1" parent="1" source="exe_in" target="join_pkg">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+
+                <!-- SPLIT Internal Flow -->
+                <mxCell id="e_calc_opt" style="edgeStyle=orthogonalEdgeStyle;html=1;entryX=0.5;entryY=0;strokeWidth=2;strokeColor=#00838f;" edge="1" parent="1" source="mask_calc" target="opt_pop">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="e_opt_pkg" style="edgeStyle=orthogonalEdgeStyle;html=1;entryX=0.5;entryY=0;strokeWidth=2;strokeColor=#00838f;" edge="1" parent="1" source="opt_pop" target="split_pkg">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="e_split_buf" style="edgeStyle=orthogonalEdgeStyle;html=1;exitX=0.5;exitY=1;entryX=0.15;entryY=0;strokeWidth=2;strokeColor=#00695c;" edge="1" parent="1" source="split_pkg" target="rsp_buf">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+
+                <!-- JOIN Internal Flow -->
+                <mxCell id="e_join_buf" style="edgeStyle=orthogonalEdgeStyle;html=1;exitX=0.5;exitY=1;entryX=0.85;entryY=0;strokeWidth=2;strokeColor=#00695c;" edge="1" parent="1" source="join_pkg" target="rsp_buf">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+
+                <!-- Schedule <-> Execute Interface (IPDOM Pointer mechanism) -->
+                <mxCell id="e_get_ptr" style="edgeStyle=orthogonalEdgeStyle;html=1;exitX=1;exitY=0.25;entryX=0.1;entryY=0;strokeWidth=3;strokeColor=#d84315;" edge="1" parent="1" source="ipdom_stack" target="rsp_buf">
+                    <mxGeometry relative="1" as="geometry">
+                        <Array as="points">
+                            <mxPoint x="340" y="358" />
+                            <mxPoint x="340" y="580" />
+                            <mxPoint x="492" y="580" />
+                        </Array>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="lbl_get_ptr" value="&lt;b&gt;dvstack_ptr&lt;/b&gt;&lt;br&gt;(Allocated pointer idx)" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];fontSize=12;fontFamily=Helvetica;fontColor=#d84315;" vertex="1" connectable="0" parent="e_get_ptr">
+                    <mxGeometry x="0.1" relative="1" as="geometry">
+                        <mxPoint x="30" y="-12" as="offset"/>
+                    </mxGeometry>
+                </mxCell>
+
+                <!-- Execute -> Commit Pipeline -->
+                <mxCell id="e_buf_cmt" style="edgeStyle=orthogonalEdgeStyle;html=1;exitX=1;exitY=0.5;entryX=0;entryY=0.5;strokeWidth=3;strokeColor=#ad1457;" edge="1" parent="1" source="rsp_buf" target="cmt_if">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+
+                <!-- Commit pushes to IPDOM & GPR -->
+                <mxCell id="e_cmt_gpr" style="edgeStyle=orthogonalEdgeStyle;html=1;exitX=0.5;exitY=0;entryX=0.5;entryY=1;strokeWidth=2;strokeColor=#ad1457;" edge="1" parent="1" source="cmt_if" target="gpr">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="lbl_rd" value="SPLIT write &lt;b&gt;rd&lt;/b&gt; = ptr" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];fontSize=12;fontFamily=Helvetica;fontColor=#880e4f;" vertex="1" connectable="0" parent="e_cmt_gpr">
+                    <mxGeometry x="-0.2" relative="1" as="geometry">
+                        <mxPoint y="-10" as="offset"/>
+                    </mxGeometry>
+                </mxCell>
+
+                <mxCell id="e_cmt_warpctl" style="edgeStyle=orthogonalEdgeStyle;html=1;exitX=0;exitY=0.25;entryX=1;entryY=0.75;strokeWidth=3;strokeColor=#fbc02d;" edge="1" parent="1" source="cmt_if" target="ipdom_stack">
+                    <mxGeometry relative="1" as="geometry">
+                        <Array as="points">
+                            <mxPoint x="930" y="615"/>
+                            <mxPoint x="930" y="740"/>
+                            <mxPoint x="320" y="740"/>
+                            <mxPoint x="320" y="433"/>
+                        </Array>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="lbl_warpctl" value="&lt;b&gt;warp_ctl_if.split / join&lt;/b&gt;&lt;br&gt;&lt;i&gt;Fired on Commit Valid Phase&lt;/i&gt;&lt;br&gt;Triggers actual IPDOM Push / Pop" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];fontSize=12;fontFamily=Helvetica;fontColor=#f57f17;" vertex="1" connectable="0" parent="e_cmt_warpctl">
+                    <mxGeometry x="0" relative="1" as="geometry">
+                        <mxPoint x="180" y="-15" as="offset"/>
+                    </mxGeometry>
+                </mxCell>
+                
+                <mxCell id="e_warpctl_state" style="edgeStyle=orthogonalEdgeStyle;html=1;exitX=0.5;exitY=1;entryX=0.5;entryY=0;strokeWidth=2;strokeColor=#e65100;dashed=1;" edge="1" parent="1" source="ipdom_stack" target="active_state">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="lbl_update" value="Updates tmask / PC" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];fontSize=12;fontFamily=Helvetica;fontColor=#e65100;" vertex="1" connectable="0" parent="e_warpctl_state">
+                    <mxGeometry x="0.2" relative="1" as="geometry">
+                        <mxPoint as="offset"/>
+                    </mxGeometry>
+                </mxCell>
+
+                <!-- Feedback Loop From GPR to RS1 -->
+                <mxCell id="e_gpr_rs1" style="edgeStyle=orthogonalEdgeStyle;html=1;exitX=0;exitY=0.5;entryX=0.9;entryY=0;strokeWidth=2;strokeColor=#880e4f;dashed=1;" edge="1" parent="1" source="gpr" target="exe_in">
+                    <mxGeometry relative="1" as="geometry">
+                        <Array as="points">
+                            <mxPoint x="960" y="380"/>
+                            <mxPoint x="960" y="100"/>
+                            <mxPoint x="780" y="100"/>
+                        </Array>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="lbl_rs1" value="JOIN read &lt;b&gt;rs1&lt;/b&gt; = ptr" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];fontSize=12;fontFamily=Helvetica;fontColor=#880e4f;backgroundColor=#ffffff;" vertex="1" connectable="0" parent="e_gpr_rs1">
+                    <mxGeometry x="0" relative="1" as="geometry">
+                        <mxPoint x="-60" y="-10" as="offset"/>
+                    </mxGeometry>
+                </mxCell>
+
+            </root>
+        </mxGraphModel>
+    </diagram>
+</mxfile>

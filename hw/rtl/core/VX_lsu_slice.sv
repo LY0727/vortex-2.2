@@ -34,8 +34,8 @@ module VX_lsu_slice import VX_gpu_pkg::*, VX_trace_pkg::*; #(
     localparam RSP_ARB_DATAW= `UUID_WIDTH + `NW_WIDTH + NUM_LANES + `PC_BITS + `NR_BITS + 1 + NUM_LANES * `XLEN + PID_WIDTH + 1 + 1;
     localparam LSUQ_SIZEW   = `LOG2UP(`LSUQ_IN_SIZE);
     localparam REQ_ASHIFT   = `CLOG2(LSU_WORD_SIZE);
-    localparam MEM_ASHIFT   = `CLOG2(`MEM_BLOCK_SIZE);
-    localparam MEM_ADDRW    = `MEM_ADDR_WIDTH - MEM_ASHIFT;
+    localparam MEM_ASHIFT   = `CLOG2(`MEM_BLOCK_SIZE);      // CACHE行大小,也是内存请求的最小粒度
+    localparam MEM_ADDRW    = `MEM_ADDR_WIDTH - MEM_ASHIFT; // 访存内存地址宽度,不包括块内偏移
 
     // tag_id = wid + PC + wb + rd + op_type + align + pid + pkt_addr + fence
     localparam TAG_ID_WIDTH = `NW_WIDTH + `PC_BITS + 1 + `NR_BITS + `INST_LSU_BITS + (NUM_LANES * REQ_ASHIFT) + PID_WIDTH + LSUQ_SIZEW + 1;
@@ -54,7 +54,7 @@ module VX_lsu_slice import VX_gpu_pkg::*, VX_trace_pkg::*; #(
     `UNUSED_VAR (execute_if.data.rs3_data)
     `UNUSED_VAR (execute_if.data.tid)
 
-    // full address calculation
+    // full address calculation  // full_addr = RS1 (基址) + 符号扩展的 offset
 
     wire req_is_fence, rsp_is_fence;
 
@@ -63,7 +63,7 @@ module VX_lsu_slice import VX_gpu_pkg::*, VX_trace_pkg::*; #(
         assign full_addr[i] = execute_if.data.rs1_data[i] + `SEXT(`XLEN, execute_if.data.op_args.lsu.offset);
     end
 
-    // address type calculation
+    // address type calculation // 判断地址到底是属于哪种类型 (IO, Local/Shared, Global)
 
     wire [NUM_LANES-1:0][`ADDR_TYPE_WIDTH-1:0] mem_req_atype;
     for (genvar i = 0; i < NUM_LANES; ++i) begin
@@ -109,18 +109,20 @@ module VX_lsu_slice import VX_gpu_pkg::*, VX_trace_pkg::*; #(
     wire no_rsp_buf_valid, no_rsp_buf_ready;
 
     // fence handling
-
+    // 由于 GPU 内有极多的 pending (未完成) 访存，碰到 FENCE 操作时，必须将标志位 fence_lock 拉高，
+    // 阻塞住流水线（mem_req_valid 拉低），直到 LSU 队列中的排队请求全部清空（通过 EOP 和 SOP 检测完成）。
     reg fence_lock;
-
     assign req_is_fence = `INST_LSU_IS_FENCE(execute_if.data.op_type);
 
     always @(posedge clk) begin
         if (reset) begin
             fence_lock <= 0;
         end else begin
+            // 【加锁】：如果这是一条 fence 请求，并且被 mem_scheduler 接纳发出了 (mem_req_fire)
             if (mem_req_fire && req_is_fence && execute_if.data.eop) begin
-                fence_lock <= 1;
+                fence_lock <= 1; 
             end
+            // 【解锁】：如果内存响应返回，并且这个响应带有的 tag 显示它就是那条 fence，且队列清空
             if (mem_rsp_fire && rsp_is_fence && mem_rsp_eop_pkt) begin
                 fence_lock <= 0;
             end
@@ -157,6 +159,8 @@ module VX_lsu_slice import VX_gpu_pkg::*, VX_trace_pkg::*; #(
     end
 
     // byte enable formatting
+    // 在 RISC-V 中，LB, LH, LW 分别读取不同的宽度。由于物理内存在总线上总是按整个 Word 甚至 Block 读取，
+    // 因此我们必须生成精细的写掩码 (byteen).
     for (genvar i = 0; i < NUM_LANES; ++i) begin
         reg [LSU_WORD_SIZE-1:0] mem_req_byteen_r;
         always @(*) begin
@@ -184,7 +188,7 @@ module VX_lsu_slice import VX_gpu_pkg::*, VX_trace_pkg::*; #(
         assign mem_req_byteen[i] = mem_req_byteen_r;
     end
 
-    // memory misalignment not supported!
+    // memory misalignment not supported!   非法的不对齐访存会被 LSU 直接拒绝掉，并且触发异常。对于合法的访存指令，编译器和调度器应该保证它们的地址是正确对齐的。
     for (genvar i = 0; i < NUM_LANES; ++i) begin
         wire lsu_req_fire = execute_if.valid && execute_if.ready;
         `RUNTIME_ASSERT((~lsu_req_fire || ~execute_if.data.tmask[i] || req_is_fence || (full_addr[i] % (1 << `INST_LSU_WSIZE(execute_if.data.op_type))) == 0),
@@ -312,18 +316,20 @@ module VX_lsu_slice import VX_gpu_pkg::*, VX_trace_pkg::*; #(
     wire                                    lsu_mem_rsp_ready;
 
     `RESET_RELAY (mem_scheduler_reset, reset);
-
+    // mem_scheduler 模块负责处理内存请求的调度和重排序，支持 out-of-order 的内存响应。
+    // 它内部维护一个请求队列，跟踪每个请求的 SOP/EOP 状态，以及对应的 tag 和 PID 信息。
+    // 当内存响应到达时，mem_scheduler 根据 tag 信息将响应正确地匹配回原始请求，并输出到 commit 阶段。
     VX_mem_scheduler #(
         .INSTANCE_ID ($sformatf("%s-scheduler", INSTANCE_ID)),
-        .CORE_REQS   (NUM_LANES),
-        .MEM_CHANNELS(NUM_LANES),
+        .CORE_REQS   (NUM_LANES),       // core内执行阶段多个请求并行发出
+        .MEM_CHANNELS(NUM_LANES),       // 总线端口的可用通道数
         .WORD_SIZE   (LSU_WORD_SIZE),
         .LINE_SIZE   (LSU_WORD_SIZE),
         .ADDR_WIDTH  (LSU_ADDR_WIDTH),
         .ATYPE_WIDTH (`ADDR_TYPE_WIDTH),
         .TAG_WIDTH   (TAG_WIDTH),
-        .CORE_QUEUE_SIZE (`LSUQ_IN_SIZE),
-        .MEM_QUEUE_SIZE (`LSUQ_OUT_SIZE),
+        .CORE_QUEUE_SIZE (`LSUQ_IN_SIZE),   // config.vh: core侧的请求队列深度,默认就是2
+        .MEM_QUEUE_SIZE (`LSUQ_OUT_SIZE),   // config.vh: 总线侧的请求队列深度,需要计算
         .UUID_WIDTH  (`UUID_WIDTH),
         .RSP_PARTIAL (1),
         .MEM_OUT_BUF (0),
@@ -437,7 +443,7 @@ module VX_lsu_slice import VX_gpu_pkg::*, VX_trace_pkg::*; #(
         wire [7:0]  rsp_data8  = rsp_align[i][0] ? rsp_data16[15:8] : rsp_data16[7:0];
 
         always @(*) begin
-            case (`INST_LSU_FMT(rsp_op_type))
+            case (`INST_LSU_FMT(rsp_op_type))  // 根据实际指令类型提取结果,并进行符号扩展
             `INST_FMT_B:  rsp_data[i] = `XLEN'(signed'(rsp_data8));
             `INST_FMT_H:  rsp_data[i] = `XLEN'(signed'(rsp_data16));
             `INST_FMT_BU: rsp_data[i] = `XLEN'(unsigned'(rsp_data8));

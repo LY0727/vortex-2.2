@@ -15,7 +15,7 @@
 
 interface VX_commit_sched_if ();
 
-    wire [`NUM_WARPS-1:0] committed_warps;
+    wire [`NUM_WARPS-1:0] committed_warps; // 每个warp一个bit，表示这个warp是否在当前周期被commit了
 
     modport master (
         output committed_warps

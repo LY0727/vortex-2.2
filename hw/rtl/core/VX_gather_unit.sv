@@ -40,7 +40,8 @@ module VX_gather_unit import VX_gpu_pkg::*; #(
     wire [BLOCK_SIZE-1:0][DATAW-1:0] commit_in_data;
     wire [BLOCK_SIZE-1:0] commit_in_ready;
     wire [BLOCK_SIZE-1:0][ISSUE_ISW_W-1:0] commit_in_isw;
-
+    // 第一部分：将每个block的commit_if输入进行缓存和格式化，生成一个宽度为ISSUE_WIDTH的输出接口。这个过程中需要处理好isw字段，确保每条指令的结果能够正确地放到全局commit接口的对应位置。
+    //  1. 如果 BLOCK_SIZE != `ISSUE_WIDTH，从哪个issue slot来的指令，要把它放到对应的commit slot里。
     for (genvar i = 0; i < BLOCK_SIZE; ++i) begin
         assign commit_in_valid[i] = commit_in_if[i].valid;
         assign commit_in_data[i] = commit_in_if[i].data;
@@ -93,7 +94,10 @@ module VX_gather_unit import VX_gpu_pkg::*; #(
             .valid_out  (commit_tmp_if.valid),
             .ready_out  (commit_tmp_if.ready)
         );
-
+        // 第二部分：线程级PID原地伸展
+        // 如果PID_BITS不为0，说明NUM_THREADS > NUM_LANES，需要根据每条指令携带的PID信息，将结果正确地放到全局commit接口的对应位置。这里需要注意的是，PID是针对每个block内的线程进行编码的，所以需要根据block内线程的索引和PID信息计算出全局线程的索引。
+        // 这里没有等待一个warp的各个packed到齐再向下发送，而是到一部分就发一部分，反正有PID，sop，eop等信息，这样不需要大缓存。
+        // 这种一部分一部分执行提交的过程，不需要再流水线中增加大缓存，最末端sched反正通过eop控制信号来判断一条指令的所有线程是否都执行完了。
         logic [`NUM_THREADS-1:0] commit_tmask_r;
         logic [`NUM_THREADS-1:0][`XLEN-1:0] commit_data_r;
         if (PID_BITS != 0) begin

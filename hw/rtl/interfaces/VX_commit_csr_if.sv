@@ -15,7 +15,7 @@
 
 interface VX_commit_csr_if ();
 
-    wire [`PERF_CTR_BITS-1:0] instret;
+    wire [`PERF_CTR_BITS-1:0] instret;  // 用于统计提交的指令数，生产版本会被替换成 1 位的占位符
 
     modport master (
         output instret

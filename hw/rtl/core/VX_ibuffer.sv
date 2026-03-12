@@ -34,12 +34,12 @@ module VX_ibuffer import VX_gpu_pkg::*; #(
 
     wire [PER_ISSUE_WARPS-1:0] ibuf_ready_in;
     assign decode_if.ready = ibuf_ready_in[decode_if.data.wid];
-
+    // 为每个warp维护一个深度可配置的 IBUF
     for (genvar w = 0; w < PER_ISSUE_WARPS; ++w) begin
         VX_elastic_buffer #(
             .DATAW   (DATAW),
-            .SIZE    (`IBUF_SIZE),
-            .OUT_REG (2) // 2-cycle EB for area reduction
+            .SIZE    (`IBUF_SIZE),   // config.h中配置，默认为4
+            .OUT_REG (2) // 2-cycle EB for area reduction; 在无输出寄存器的深度为4的fifo的基础上，再增加一级单拍输出寄存器。但是因为FIFO输出未打拍，整体延迟最小还是一拍。
         ) instr_buf (
             .clk      (clk),
             .reset    (reset),
@@ -63,7 +63,7 @@ module VX_ibuffer import VX_gpu_pkg::*; #(
             .ready_out(ibuffer_if[w].ready)
         );
     `ifndef L1_ENABLE
-        assign decode_if.ibuf_pop[w] = ibuffer_if[w].valid && ibuffer_if[w].ready;
+        assign decode_if.ibuf_pop[w] = ibuffer_if[w].valid && ibuffer_if[w].ready; 
     `endif
     end
 

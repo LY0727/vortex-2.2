@@ -19,8 +19,8 @@
 package VX_gpu_pkg;
 
     typedef struct packed {
-        logic                    valid;
-        logic [`NUM_THREADS-1:0] tmask;
+        logic                    valid;  
+        logic [`NUM_THREADS-1:0] tmask;  
     } tmc_t;
 
     typedef struct packed {
@@ -31,33 +31,33 @@ package VX_gpu_pkg;
 
     typedef struct packed {
         logic                    valid;
-        logic                    is_dvg;
-        logic [`NUM_THREADS-1:0] then_tmask;
-        logic [`NUM_THREADS-1:0] else_tmask;
-        logic [`PC_BITS-1:0]     next_pc;
+        logic                    is_dvg;     // 是不是发生了发散？(Divergence)
+        logic [`NUM_THREADS-1:0] then_tmask; // 如果发生发散，走 then 路径的线程们
+        logic [`NUM_THREADS-1:0] else_tmask; // 走 else 路径的线程们
+        logic [`PC_BITS-1:0]     next_pc;    // else路径的PC，以便稍后回来执行
     } split_t;
 
     typedef struct packed {
         logic valid;
-        logic [`DV_STACK_SIZEW-1:0] stack_ptr;
+        logic [`DV_STACK_SIZEW-1:0] stack_ptr; // 分化栈指针，指向当前分化层的栈顶
     } join_t;
 
     typedef struct packed {
         logic                   valid;
-        logic [`NB_WIDTH-1:0]   id;
+        logic [`NB_WIDTH-1:0]   id;      // 屏障ID，用户指定的一个值，用于区分不同的屏障指令
         logic                   is_global;
     `ifdef GBAR_ENABLE
         logic [`MAX(`NW_WIDTH, `NC_WIDTH)-1:0] size_m1;
     `else
-        logic [`NW_WIDTH-1:0]   size_m1;
+        logic [`NW_WIDTH-1:0]   size_m1; // block内屏障，对应硬件core内屏障；size就是 NUM_WARPS。
     `endif
-        logic                   is_noop;
+        logic                   is_noop; // 是不是一个 noop 屏障指令？noop 屏障指令不需要真正执行屏障操作，主要用于占位和调度目的
     } barrier_t;
 
     typedef struct packed {
         logic [`XLEN-1:0]       startup_addr;
-        logic [`XLEN-1:0]       startup_arg;
-        logic [7:0]             mpm_class;
+        logic [`XLEN-1:0]       startup_arg;  
+        logic [7:0]             mpm_class;   // Multi-Program Multi-Thread class, 用于区分不同的 MPM 任务
     } base_dcrs_t;
 
     //////////////////////////// Perf counter types ///////////////////////////
@@ -103,7 +103,7 @@ package VX_gpu_pkg;
     } alu_args_t;
 
     typedef struct packed {
-        logic [($bits(alu_args_t)-`INST_FRM_BITS-`INST_FMT_BITS)-1:0] __padding;
+        logic [($bits(alu_args_t)-`INST_FRM_BITS-`INST_FMT_BITS)-1:0] __padding; 
         logic [`INST_FRM_BITS-1:0] frm;
         logic [`INST_FMT_BITS-1:0] fmt;
     } fpu_args_t;
@@ -123,10 +123,11 @@ package VX_gpu_pkg;
     } csr_args_t;
 
     typedef struct packed {
-        logic [($bits(alu_args_t)-1)-1:0] __padding;
-        logic is_neg;
+        logic [($bits(alu_args_t)-1)-1:0] __padding; // 填充到和其他 args 一样宽，方便后续的 union 操作
+        logic is_neg;   // 
     } wctl_args_t;
-
+    
+    // union of all instruction arguments, used for easier decoding and issue logic
     typedef union packed {
         alu_args_t  alu;
         fpu_args_t  fpu;
@@ -140,25 +141,25 @@ package VX_gpu_pkg;
     ///////////////////////// LSU memory Parameters ///////////////////////////
 
     localparam LSU_WORD_SIZE        = `XLEN / 8;
-    localparam LSU_ADDR_WIDTH	    = (`MEM_ADDR_WIDTH - `CLOG2(LSU_WORD_SIZE));
-    localparam LSU_MEM_BATCHES      = 1;
-    localparam LSU_TAG_ID_BITS      = (`CLOG2(`LSUQ_IN_SIZE) + `CLOG2(LSU_MEM_BATCHES));
-    localparam LSU_TAG_WIDTH        = (`UUID_WIDTH + LSU_TAG_ID_BITS);
-    localparam LSU_NUM_REQS	        = `NUM_LSU_BLOCKS * `NUM_LSU_LANES;
+    localparam LSU_ADDR_WIDTH	    = (`MEM_ADDR_WIDTH - `CLOG2(LSU_WORD_SIZE));         // 低位对齐
+    localparam LSU_MEM_BATCHES      = 1;                                                 // 每个 LSU 请求中合并的内存访问数量，默认为 1，即不合并。可以根据需要调整这个值来增加请求的粒度，从而提高内存带宽利用率，但也可能增加请求的延迟。
+    localparam LSU_TAG_ID_BITS      = (`CLOG2(`LSUQ_IN_SIZE) + `CLOG2(LSU_MEM_BATCHES)); // LSU tag 中的 ID bits，用于区分不同的请求。因为 LSU 内部可能会合并多个请求，所以需要考虑 batch 的情况
+    localparam LSU_TAG_WIDTH        = (`UUID_WIDTH + LSU_TAG_ID_BITS);                   // LSU 请求的 tag bits 总宽度，包括 UUID 和 ID bits
+    localparam LSU_NUM_REQS	        = `NUM_LSU_BLOCKS * `NUM_LSU_LANES;                  // 每个周期 LSU 最多可以发出的内存请求数量，取决于 LSU 的块数量和每块的通道数量
 
     ////////////////////////// Icache Parameters //////////////////////////////
 
     // Word size in bytes
-    localparam ICACHE_WORD_SIZE	    = 4;
+    localparam ICACHE_WORD_SIZE	    = 4;     
     localparam ICACHE_ADDR_WIDTH	= (`MEM_ADDR_WIDTH - `CLOG2(ICACHE_WORD_SIZE));
 
     // Block size in bytes
     localparam ICACHE_LINE_SIZE	    = `L1_LINE_SIZE;
 
-    // Core request tag Id bits
+    // Core request tag Id bits  // warp ID
     localparam ICACHE_TAG_ID_BITS	= `NW_WIDTH;
 
-    // Core request tag bits
+    // Core request tag bits     // UUID仅用于开发调试阶段和溯源
     localparam ICACHE_TAG_WIDTH	    = (`UUID_WIDTH + ICACHE_TAG_ID_BITS);
 
     // Memory request data bits
@@ -173,7 +174,7 @@ package VX_gpu_pkg;
 
     ////////////////////////// Dcache Parameters //////////////////////////////
 
-    // Word size in bytes
+    // Word size in bytes  // LSU 每个通道的访存位宽，也是 Dcache 的数据位宽，因为 Dcache 直接和 LSU 对接
     localparam DCACHE_WORD_SIZE	    = `LSU_LINE_SIZE;
     localparam DCACHE_ADDR_WIDTH	= (`MEM_ADDR_WIDTH - `CLOG2(DCACHE_WORD_SIZE));
 
@@ -254,12 +255,16 @@ package VX_gpu_pkg;
 
     /////////////////////////////// Issue parameters //////////////////////////
 
-    localparam ISSUE_ISW   = `CLOG2(`ISSUE_WIDTH);
+    localparam ISSUE_ISW   = `CLOG2(`ISSUE_WIDTH);    //ISSUE_WIDTH = `UP(`NUM_WARPS / 8)
     localparam ISSUE_ISW_W = `UP(ISSUE_ISW);
-    localparam PER_ISSUE_WARPS = `NUM_WARPS / `ISSUE_WIDTH;
+    localparam PER_ISSUE_WARPS = `NUM_WARPS / `ISSUE_WIDTH;   //
     localparam ISSUE_WIS   = `CLOG2(PER_ISSUE_WARPS);
     localparam ISSUE_WIS_W = `UP(ISSUE_WIS);
-
+    // 例如：core支持16个warp，那么会配置2个issue单元，每个issue单元调度8个warp；PER_ISSUE_WARPS是8。
+    // 我们需要建立warp到issue单元的映射，wid是对16个warp的编号；
+    // isw是映射到那个issue单元的编号，1bit，其实就是wid的高位;  
+    // wis是对一个issue单元负责的8个warp的编号，3bit，就是wid的低3位。
+    // 通过isw和wis，我们就可以知道一个指令属于哪个warp，以及这个warp由哪个issue单元调度。
     function logic [`NW_WIDTH-1:0] wis_to_wid(
         input logic [ISSUE_WIS_W-1:0] wis,
         input logic [ISSUE_ISW_W-1:0] isw

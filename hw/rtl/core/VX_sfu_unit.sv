@@ -25,7 +25,7 @@ module VX_sfu_unit import VX_gpu_pkg::*; #(
     VX_pipeline_perf_if.slave pipeline_perf_if,
 `endif
 
-    input base_dcrs_t       base_dcrs,
+    input base_dcrs_t       base_dcrs,  // 主要是性能计数器的功能模式配置。
 
     // Inputs
     VX_dispatch_if.slave    dispatch_if [`ISSUE_WIDTH],
@@ -163,7 +163,7 @@ module VX_sfu_unit import VX_gpu_pkg::*; #(
         .NUM_INPUTS (RSP_ARB_SIZE),
         .DATAW      (RSP_ARB_DATAW),
         .ARBITER    ("R"),
-        .OUT_BUF    (3)
+        .OUT_BUF    (3) 
     ) rsp_arb (
         .clk       (clk),
         .reset     (reset),

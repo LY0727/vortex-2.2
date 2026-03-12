@@ -63,7 +63,7 @@ module VX_issue_slice import VX_gpu_pkg::*, VX_trace_pkg::*; #(
         .perf_units_uses(issue_perf.units_uses),
         .perf_sfu_uses  (issue_perf.sfu_uses),
     `endif
-        .writeback_if   (writeback_if),
+        .writeback_if   (writeback_if),     // writeback_if 用于更新寄存器的就绪状态
         .ibuffer_if     (ibuffer_if),
         .scoreboard_if  (scoreboard_if)
     );
@@ -76,7 +76,7 @@ module VX_issue_slice import VX_gpu_pkg::*, VX_trace_pkg::*; #(
      `ifdef PERF_ENABLE
         .perf_stalls    (issue_perf.opd_stalls),
      `endif
-        .writeback_if   (writeback_if),
+        .writeback_if   (writeback_if),     // writeback_if 用于获取指令的目的寄存器和写回数据，以便将数据转发给等待这些寄存器的指令。
         .scoreboard_if  (scoreboard_if),
         .operands_if    (operands_if)
     );

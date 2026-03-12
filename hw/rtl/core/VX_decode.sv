@@ -47,9 +47,9 @@ module VX_decode import VX_gpu_pkg::*, VX_trace_pkg::*; #(
     `UNUSED_VAR (clk)
     `UNUSED_VAR (reset)
 
-    reg [`EX_BITS-1:0] ex_type;
-    reg [`INST_OP_BITS-1:0] op_type;
-    op_args_t op_args;
+    reg [`EX_BITS-1:0] ex_type;         // 执行单元类型，ALU/LSU/FPU/SFU等
+    reg [`INST_OP_BITS-1:0] op_type;    // 具体的指令类型，比如 ALU 的 ADD/SUB/AND/OR 等，或者分支指令的 BEQ/BNE 等
+    op_args_t op_args;                  // 指令的操作数和参数信息，具体字段根据指令类型不同而不同
     reg [`NR_BITS-1:0] rd_r, rs1_r, rs2_r, rs3_r;
     reg use_rd, use_rs1, use_rs2, use_rs3;
     reg is_wstall;
@@ -60,7 +60,7 @@ module VX_decode import VX_gpu_pkg::*, VX_trace_pkg::*; #(
     wire [2:0] func3  = instr[14:12];
     wire [4:0] func5  = instr[31:27];
     wire [6:0] func7  = instr[31:25];
-    wire [11:0] u_12  = instr[31:20];
+    wire [11:0] u_12  = instr[31:20];  // 12-bit immediate for I-type instructions, or the upper 12 bits of S-type instructions
 
     wire [4:0] rd  = instr[11:7];
     wire [4:0] rs1 = instr[19:15];
@@ -479,6 +479,7 @@ module VX_decode import VX_gpu_pkg::*, VX_trace_pkg::*; #(
                 endcase
             end
         `endif
+//  自定义指令扩展 译码=====================================================
             `INST_EXT1: begin
                 case (func7)
                     7'h00: begin
@@ -497,7 +498,7 @@ module VX_decode import VX_gpu_pkg::*, VX_trace_pkg::*; #(
                             3'h2: begin // SPLIT
                                 op_type = `INST_OP_BITS'(`INST_SFU_SPLIT);
                                 use_rd    = 1;
-                                op_args.wctl.is_neg = rs2[0];
+                                op_args.wctl.is_neg = rs2[0];  //注意这里实际是instr[20];
                                 `USED_IREG (rs1);
                                 `USED_IREG (rd);
                             end
@@ -512,7 +513,7 @@ module VX_decode import VX_gpu_pkg::*, VX_trace_pkg::*; #(
                             end
                             3'h5: begin // PRED
                                 op_type = `INST_OP_BITS'(`INST_SFU_PRED);
-                                op_args.wctl.is_neg = rd[0];
+                                op_args.wctl.is_neg = rd[0];   //注意这里实际是instr[7];
                                 `USED_IREG (rs1);
                                 `USED_IREG (rs2);
                             end
@@ -528,7 +529,8 @@ module VX_decode import VX_gpu_pkg::*, VX_trace_pkg::*; #(
 
     // disable write to integer register r0
     wire wb = use_rd && (rd_r != 0);
-
+    // 直通路径，纯连线；因为译码是纯组合逻辑，直接输出结果。 
+    // 使用这个模块是方便后续优化，如果后续时序不够，再打拍。
     VX_elastic_buffer #(
         .DATAW (DATAW),
         .SIZE  (0)
@@ -546,12 +548,11 @@ module VX_decode import VX_gpu_pkg::*, VX_trace_pkg::*; #(
     ///////////////////////////////////////////////////////////////////////////
 
     wire fetch_fire = fetch_if.valid && fetch_if.ready;
-
     assign decode_sched_if.valid    = fetch_fire;
     assign decode_sched_if.wid      = fetch_if.data.wid;
     assign decode_sched_if.is_wstall = is_wstall;
 `ifndef L1_ENABLE
-    assign fetch_if.ibuf_pop = decode_if.ibuf_pop;
+    assign fetch_if.ibuf_pop = decode_if.ibuf_pop;   // 无L1cache时需要考虑该问题，避免死锁。
 `endif
 
 `ifdef DBG_TRACE_PIPELINE

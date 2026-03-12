@@ -13,6 +13,44 @@
 
 `ifndef VX_CONFIG_VH
 `define VX_CONFIG_VH
+/*===================================================
+0. liuao  config
+====================================================*/
+// ==========================================
+// [ User Custom Configurations ]
+// 提示：取消以下宏定义的注释即可覆盖系统的默认配置
+// ==========================================
+
+// --- 1. ISA 扩展与系统位宽 ---
+// `define XLEN_64              // 启用 64位 系统位宽 (默认 32位)
+// `define EXT_M_DISABLE        // 禁用 M 扩展 (硬件乘除法)
+`define EXT_F_DISABLE        // 禁用 F 扩展 (单精度浮点)
+`define EXT_D_DISABLE        // 禁用 D 扩展 (双精度浮点)
+// `define EXT_ZICOND_DISABLE   // 禁用 Zicond 扩展 (整数条件操作)
+
+// --- 2. 处理器微架构 (核心/线程分配) ---
+// `define NUM_CLUSTERS 1       // 集群(Cluster)数量，默认 1
+// `define NUM_CORES 1          // 每集群的核心(Core)数量，默认 1
+// `define NUM_WARPS 4          // 每核心的 Warp (线程束)数量，默认 4
+// `define NUM_THREADS 4        // 每 Warp 的 Thread 数量，默认 4
+
+// --- 3. 缓存层次结构配置 ---
+`define L1_DISABLE           // 禁用 L1 Cache (I-Cache & D-Cache)(默认启用)
+// `define L2_ENABLE            // 启用 L2 Cache (默认禁用)
+// `define L3_ENABLE            // 启用 L3 Cache (默认禁用)
+// `define MEM_BLOCK_SIZE 64    // Cache 行大小及主存块大小(Bytes)，默认 64
+`define LMEM_DISABLE         // 禁用 LMEM (本地内存)，默认启用
+
+// --- 4. 浮点单元 (FPU) 后端选择 ---
+// `define FPU_FPNEW            // 使用开源 FPNEW FPU
+// `define FPU_DSP              // 使用 DSP FPU (针对 FPGA 优化)
+// `define FPU_DPI              // 使用 DPI FPU (适用于 C/C++ 联合仿真)
+
+// --- 5. 调试与综合模式 ---
+// `define SYNTHESIS            // 标记为综合模式 (屏蔽仿真专用的 DPI 代码)
+// `define DEBUG_LEVEL 3        // 仿真输出的详细等级，默认 3
+// `define DPI_DISABLE          // 禁用 SystemVerilog DPI 接口
+
 
 /*===================================================
 1. 宏工具函数
@@ -105,11 +143,11 @@
 `endif
 
 `ifndef NUM_WARPS
-`define NUM_WARPS 4
+`define NUM_WARPS 16
 `endif
 
 `ifndef NUM_THREADS
-`define NUM_THREADS 4
+`define NUM_THREADS 16
 `endif
     // barrier 为什么是warps的一半；看schedule.sv
 `ifndef NUM_BARRIERS
@@ -299,7 +337,7 @@
     Icache、Dcache、L2cache、L3cache、LMEM的配置
     ISA扩展
 ====================================================*/
-// Issue width  发射宽度是指可以同时执行的warp数,这样执行单元也要加
+// Issue width  发射宽度是指每周期发出指令数。
 `ifndef ISSUE_WIDTH
 `define ISSUE_WIDTH     `UP(`NUM_WARPS / 8)
 `endif
@@ -343,17 +381,17 @@
 `define IBUF_SIZE   4
 `endif
 
-// LSU line size    line数 * 每指令字节数 * cache行大小（64words）
+// LSU line size    line数 * 每指令字节数(也就是core侧实际发出的数据请求宽度) 与 cache行大小（64words）(也就是总线侧一次能读出的数据宽度)
 `ifndef LSU_LINE_SIZE
 `define LSU_LINE_SIZE   `MIN(`NUM_LSU_LANES * (`XLEN / 8), `L1_LINE_SIZE)
 `endif
 
-// Size of LSU Core Request Queue
+// Size of LSU Core Request Queue  core侧未完成的访存请求的pending深度,也就是lsu内的缓冲池深度. 关键系数是2.
 `ifndef LSUQ_IN_SIZE
 `define LSUQ_IN_SIZE    (2 * (`NUM_THREADS / `NUM_LSU_LANES))
 `endif
 
-// Size of LSU Memory Request Queue
+// Size of LSU Memory Request Queue   总线侧未完成的访存请求的pending深度,
 `ifndef LSUQ_OUT_SIZE
 `define LSUQ_OUT_SIZE   `MAX(`LSUQ_IN_SIZE, `LSU_LINE_SIZE / (`XLEN / 8))
 `endif
@@ -483,7 +521,7 @@
 
 // Icache Configurable Knobs //////////////////////////////////////////////////
 
-// Cache Enable
+// Cache Enable   默认设置icache
 `ifndef ICACHE_DISABLE
 `define ICACHE_ENABLE
 `endif
@@ -524,14 +562,14 @@
 `define ICACHE_MRSQ_SIZE 0
 `endif
 
-// Number of Associative Ways
+// Number of Associative Ways  默认直接映射！
 `ifndef ICACHE_NUM_WAYS
 `define ICACHE_NUM_WAYS 1
 `endif
 
 // Dcache Configurable Knobs //////////////////////////////////////////////////
 
-// Cache Enable
+// Cache Enable  默认设置dcache 16KB
 `ifndef DCACHE_DISABLE
 `define DCACHE_ENABLE
 `endif
@@ -578,7 +616,7 @@
 `define DCACHE_MRSQ_SIZE 0
 `endif
 
-// Number of Associative Ways
+// Number of Associative Ways   默认直接映射！
 `ifndef DCACHE_NUM_WAYS
 `define DCACHE_NUM_WAYS 1
 `endif

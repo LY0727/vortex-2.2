@@ -1,0 +1,97 @@
+<mxfile host="65bd71144e">
+    <diagram id="vx_sb" name="Scoreboard Microarchitecture">
+        <mxGraphModel dx="1333" dy="732" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1000" pageHeight="800" math="0" shadow="0">
+            <root>
+                <mxCell id="0"/>
+                <mxCell id="1" parent="0"/>
+                <mxCell id="bg_scoreboard" value="VX_scoreboard 模块边界" style="swimlane;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;dashed=1;startSize=30;fontSize=14;fontStyle=1" parent="1" vertex="1">
+                    <mxGeometry x="160" y="80" width="600" height="520" as="geometry">
+                        <mxRectangle x="160" y="80" width="200" height="30" as="alternateBounds"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="intf_ibuf" value="ibuffer_if (0...W-1)&#xa;[来自 Fetch/Decode]" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontStyle=1" parent="1" vertex="1">
+                    <mxGeometry x="10" y="280" width="130" height="80" as="geometry"/>
+                </mxCell>
+                <mxCell id="comp_hazard" value="冒险检测 / 操作数状态比对&#xa;operands_ready_n" style="rhombus;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;" parent="1" vertex="1">
+                    <mxGeometry x="240" y="280" width="200" height="80" as="geometry"/>
+                </mxCell>
+                <mxCell id="comp_inuse" value="inuse_regs [31:0]&#xa;寄存器占用状态表" style="shape=cylinder3;whiteSpace=wrap;html=1;boundedLbl=1;backgroundOutline=1;size=15;fillColor=#ffe6cc;strokeColor=#d79b00;" parent="1" vertex="1">
+                    <mxGeometry x="270" y="420" width="140" height="80" as="geometry"/>
+                </mxCell>
+                <mxCell id="comp_arbiter" value="VX_stream_arb&#xa;(公平轮询仲裁)&#xa;选出1个就绪Warp" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontStyle=1" parent="1" vertex="1">
+                    <mxGeometry x="540" y="220" width="160" height="200" as="geometry"/>
+                </mxCell>
+                <mxCell id="intf_scout" value="scoreboard_if&#xa;[发往 Issue 队列]" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontStyle=1" parent="1" vertex="1">
+                    <mxGeometry x="820" y="280" width="130" height="80" as="geometry"/>
+                </mxCell>
+                <mxCell id="intf_wb" value="writeback_if&#xa;[指令执行完毕写回]" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontStyle=1" parent="1" vertex="1">
+                    <mxGeometry x="10" y="430" width="130" height="60" as="geometry"/>
+                </mxCell>
+                <mxCell id="edge1" value="valid, data" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" parent="1" source="intf_ibuf" target="comp_staging" edge="1">
+                    <mxGeometry relative="1" as="geometry">
+                        <Array as="points">
+                            <Point x="160" y="280"/>
+                            <Point x="160" y="210"/>
+                        </Array>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="edge2" value="提取 rd, rs" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;dashed=1;" parent="1" source="intf_ibuf" target="comp_hazard" edge="1">
+                    <mxGeometry relative="1" as="geometry">
+                        <mxPoint x="150" y="320" as="sourcePoint"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="edge3" value="暂存区 data (rd, rs)" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;dashed=1;" parent="1" source="comp_staging" target="comp_hazard" edge="1">
+                    <mxGeometry x="0.5" relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="edge4" value="staging_fire &amp; wb&#xa;标忙(Busy=1)" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontColor=#c00;" parent="1" source="comp_staging" target="comp_inuse" edge="1">
+                    <mxGeometry relative="1" as="geometry">
+                        <Array as="points">
+                            <Point x="460" y="210"/>
+                            <Point x="460" y="460"/>
+                        </Array>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="edge5" value="查询寄存器状态&#xa;inuse_regs[]" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;dashed=1;" parent="1" source="comp_inuse" target="comp_hazard" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="edge6" value="writeback_fire (wis匹配)&#xa;解除占用(Busy=0)" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontColor=#009900;" parent="1" source="intf_wb" target="comp_inuse" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="edge7" value="arb_valid_in&#xa;(operands_ready)" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeWidth=2;" parent="1" source="comp_hazard" target="comp_arbiter" edge="1">
+                    <mxGeometry relative="1" as="geometry">
+                        <Array as="points">
+                            <Point x="500" y="320"/>
+                        </Array>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="edge8" value="arb_data_in" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeWidth=2;" parent="1" source="comp_staging" target="comp_arbiter" edge="1">
+                    <mxGeometry relative="1" as="geometry">
+                        <Array as="points">
+                            <Point x="500" y="210"/>
+                            <Point x="500" y="260"/>
+                        </Array>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="edge9" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeWidth=3;strokeColor=#1BA1E2;" parent="1" source="comp_arbiter" target="intf_scout" edge="1">
+                    <mxGeometry y="-20" relative="1" as="geometry">
+                        <mxPoint as="offset"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="2" value="" style="shape=image;verticalLabelPosition=bottom;labelBackgroundColor=default;verticalAlign=top;aspect=fixed;imageAspect=0;editableCssRules=.*;image=data:image/svg+xml,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9Ii0xIC0xIDkwMiA1NTIiIHdpZHRoPSI5MDIiIGhlaWdodD0iNTUyIj4mI3hhOyAgPGRlZnM+JiN4YTsgICAgPG1hcmtlciBpZD0iYXJyb3ciIHZpZXdCb3g9IjAgMCAxMCAxMCIgcmVmWD0iOSIgcmVmWT0iNSIgbWFya2VyV2lkdGg9IjYiIG1hcmtlckhlaWdodD0iNiIgb3JpZW50PSJhdXRvLXN0YXJ0LXJldmVyc2UiPiYjeGE7ICAgICAgPHBhdGggZD0iTSAwIDAgTCAxMCA1IEwgMCAxMCB6IiBmaWxsPSIjMzMzIi8+JiN4YTsgICAgPC9tYXJrZXI+JiN4YTsgICAgPG1hcmtlciBpZD0iYXJyb3ctZGFzaGVkIiB2aWV3Qm94PSIwIDAgMTAgMTAiIHJlZlg9IjkiIHJlZlk9IjUiIG1hcmtlcldpZHRoPSI2IiBtYXJrZXJIZWlnaHQ9IjYiIG9yaWVudD0iYXV0by1zdGFydC1yZXZlcnNlIj4mI3hhOyAgICAgIDxwYXRoIGQ9Ik0gMCAwIEwgMTAgNSBMIDAgMTAgeiIgZmlsbD0iIzY2NiIvPiYjeGE7ICAgIDwvbWFya2VyPiYjeGE7ICA8L2RlZnM+JiN4YTsmI3hhOyAgPHJlY3Qgd2lkdGg9IjEwMCUiIGhlaWdodD0iMTAwJSIgZmlsbD0iI2Y4ZjlmYSIgcng9IjEwIi8+JiN4YTsmI3hhOyAgPHRleHQgeD0iNDUwIiB5PSIzMCIgZm9udC1mYW1pbHk9IkFyaWFsIiBmb250LXNpemU9IjIwIiBmb250LXdlaWdodD0iYm9sZCIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZmlsbD0iIzMzMyI+Vlhfc2NvcmVib2FyZCBIYXJkd2FyZSBBcmNoaXRlY3R1cmU8L3RleHQ+JiN4YTsmI3hhOyAgPGcgaWQ9ImlucHV0cyI+JiN4YTsgICAgPHJlY3QgeD0iMjAiIHk9IjgwIiB3aWR0aD0iMTIwIiBoZWlnaHQ9IjQwIiBmaWxsPSIjZTNmMmZkIiBzdHJva2U9IiMxZTg4ZTUiIHN0cm9rZS13aWR0aD0iMiIgcng9IjUiLz4mI3hhOyAgICA8dGV4dCB4PSI4MCIgeT0iMTA1IiBmb250LWZhbWlseT0iQXJpYWwiIGZvbnQtc2l6ZT0iMTQiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGZpbGw9IiMwZDQ3YTEiPmlidWZmZXJfaWYgW3ddPC90ZXh0PiYjeGE7JiN4YTsgICAgPHJlY3QgeD0iMjAiIHk9IjQ1MCIgd2lkdGg9IjEyMCIgaGVpZ2h0PSI0MCIgZmlsbD0iI2ZjZTRlYyIgc3Ryb2tlPSIjZDgxYjYwIiBzdHJva2Utd2lkdGg9IjIiIHJ4PSI1Ii8+JiN4YTsgICAgPHRleHQgeD0iODAiIHk9IjQ3NSIgZm9udC1mYW1pbHk9IkFyaWFsIiBmb250LXNpemU9IjE0IiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBmaWxsPSIjODgwZTRmIj53cml0ZWJhY2tfaWY8L3RleHQ+JiN4YTsgIDwvZz4mI3hhOyYjeGE7ICA8ZyBpZD0id2FycF9sb2dpYyI+JiN4YTsgICAgPHJlY3QgeD0iMTgwIiB5PSI2MCIgd2lkdGg9IjM0MCIgaGVpZ2h0PSIzMDAiIGZpbGw9IiNmZmZmZmYiIHN0cm9rZT0iIzllOWU5ZSIgc3Ryb2tlLXdpZHRoPSIyIiBzdHJva2UtZGFzaGFycmF5PSI1LDUiIHJ4PSIxMCIvPiYjeGE7ICAgIDx0ZXh0IHg9IjM1MCIgeT0iODUiIGZvbnQtZmFtaWx5PSJBcmlhbCIgZm9udC1zaXplPSIxNCIgZm9udC1zdHlsZT0iaXRhbGljIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBmaWxsPSIjNjE2MTYxIj5QZXIgV2FycCBMb2dpYyAoUEVSX0lTU1VFX1dBUlBTKTwvdGV4dD4mI3hhOyYjeGE7ICAgIDxyZWN0IHg9IjIwMCIgeT0iMTEwIiB3aWR0aD0iMTQwIiBoZWlnaHQ9IjUwIiBmaWxsPSIjZmZmM2UwIiBzdHJva2U9IiNmNTdjMDAiIHN0cm9rZS13aWR0aD0iMiIgcng9IjUiLz4mI3hhOyAgICA8dGV4dCB4PSIyNzAiIHk9IjEzMCIgZm9udC1mYW1pbHk9IkFyaWFsIiBmb250LXNpemU9IjEyIiBmb250LXdlaWdodD0iYm9sZCIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZmlsbD0iI2U2NTEwMCI+VlhfZWxhc3RpY19idWZmZXI8L3RleHQ+JiN4YTsgICAgPHRleHQgeD0iMjcwIiB5PSIxNDUiIGZvbnQtZmFtaWx5PSJBcmlhbCIgZm9udC1zaXplPSIxMCIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZmlsbD0iI2U2NTEwMCI+KFN0YWdpbmcgQnVmZmVyKTwvdGV4dD4mI3hhOyYjeGE7ICAgIDxyZWN0IHg9IjIwMCIgeT0iMjEwIiB3aWR0aD0iMTQwIiBoZWlnaHQ9IjQwIiBmaWxsPSIjZThmNWU5IiBzdHJva2U9IiM0M2EwNDciIHN0cm9rZS13aWR0aD0iMiIgcng9IjUiLz4mI3hhOyAgICA8dGV4dCB4PSIyNzAiIHk9IjIzNSIgZm9udC1mYW1pbHk9IkFyaWFsIiBmb250LXNpemU9IjEyIiBmb250LXdlaWdodD0iYm9sZCIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZmlsbD0iIzFiNWUyMCI+aW51c2VfcmVncyBbTlVNX1JFR1NdPC90ZXh0PiYjeGE7JiN4YTsgICAgPHBvbHlnb24gcG9pbnRzPSI0MzAsMTIwIDQ5MCwxNjAgNDMwLDIwMCIgZmlsbD0iI2VkZTdmNiIgc3Ryb2tlPSIjNWUzNWIxIiBzdHJva2Utd2lkdGg9IjIiLz4mI3hhOyAgICA8dGV4dCB4PSI0NDUiIHk9IjE2NSIgZm9udC1mYW1pbHk9IkFyaWFsIiBmb250LXNpemU9IjEyIiBmb250LXdlaWdodD0iYm9sZCIgZmlsbD0iIzMxMWI5MiI+Q2hlY2s8L3RleHQ+JiN4YTsmI3hhOyAgICA8cGF0aCBkPSJNIDQ1MCAyNTAgTCA0NzAgMjUwIEEgMjAgMjAgMCAwIDAgNDcwIDI5MCBMIDQ1MCAyOTAgWiIgZmlsbD0iI2ZmZmZmZiIgc3Ryb2tlPSIjMzMzIiBzdHJva2Utd2lkdGg9IjIiLz4mI3hhOyAgICA8dGV4dCB4PSI0NjAiIHk9IjI3NCIgZm9udC1mYW1pbHk9IkFyaWFsIiBmb250LXNpemU9IjEwIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIj5BTkQ8L3RleHQ+JiN4YTsgIDwvZz4mI3hhOyYjeGE7ICA8ZyBpZD0iYXJiaXRlciI+JiN4YTsgICAgPHJlY3QgeD0iNjIwIiB5PSIxNTAiIHdpZHRoPSIxMjAiIGhlaWdodD0iMTUwIiBmaWxsPSIjZTBmN2ZhIiBzdHJva2U9IiMwMGFjYzEiIHN0cm9rZS13aWR0aD0iMiIgcng9IjUiLz4mI3hhOyAgICA8dGV4dCB4PSI2ODAiIHk9IjIyMCIgZm9udC1mYW1pbHk9IkFyaWFsIiBmb250LXNpemU9IjE0IiBmb250LXdlaWdodD0iYm9sZCIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZmlsbD0iIzAwNjA2NCI+Vlhfc3RyZWFtX2FyYjwvdGV4dD4mI3hhOyAgICA8dGV4dCB4PSI2ODAiIHk9IjI0MCIgZm9udC1mYW1pbHk9IkFyaWFsIiBmb250LXNpemU9IjEwIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBmaWxsPSIjMDA2MDY0Ij5BcmJpdGVyID0gIkYiPC90ZXh0PiYjeGE7ICA8L2c+JiN4YTsmI3hhOyAgPGcgaWQ9Im91dHB1dCI+JiN4YTsgICAgPHJlY3QgeD0iODAwIiB5PSIyMDUiIHdpZHRoPSI4MCIgaGVpZ2h0PSI0MCIgZmlsbD0iI2UzZjJmZCIgc3Ryb2tlPSIjMWU4OGU1IiBzdHJva2Utd2lkdGg9IjIiIHJ4PSI1Ii8+JiN4YTsgICAgPHRleHQgeD0iODQwIiB5PSIyMzAiIGZvbnQtZmFtaWx5PSJBcmlhbCIgZm9udC1zaXplPSIxMiIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZmlsbD0iIzBkNDdhMSI+c2NvcmVib2FyZF9pZjwvdGV4dD4mI3hhOyAgPC9nPiYjeGE7JiN4YTsgIDxnIGlkPSJjb25uZWN0aW9ucyIgc3Ryb2tlPSIjMzMzIiBzdHJva2Utd2lkdGg9IjIiIGZpbGw9Im5vbmUiPiYjeGE7ICAgIDxwYXRoIGQ9Ik0gMTQwIDEwMCBMIDE4MCAxMDAgTCAxODAgMTM1IEwgMjAwIDEzNSIgbWFya2VyLWVuZD0idXJsKCNhcnJvdykiLz4mI3hhOyAgICA8dGV4dCB4PSIxNjAiIHk9IjEyNSIgZm9udC1mYW1pbHk9IkFyaWFsIiBmb250LXNpemU9IjEwIiBmaWxsPSIjMzMzIj52YWxpZC9kYXRhPC90ZXh0PiYjeGE7JiN4YTsgICAgPHBhdGggZD0iTSAzNDAgMTM1IEwgMzgwIDEzNSIgc3Ryb2tlLWRhc2hhcnJheT0iMywzIi8+JiN4YTsgICAgPHRleHQgeD0iMzYwIiB5PSIxMzAiIGZvbnQtZmFtaWx5PSJBcmlhbCIgZm9udC1zaXplPSIxMCIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZmlsbD0iIzMzMyI+c3RhZ2luZ19pZjwvdGV4dD4mI3hhOyYjeGE7ICAgIDxwYXRoIGQ9Ik0gMzgwIDEzNSBMIDQzMCAxNDUiIG1hcmtlci1lbmQ9InVybCgjYXJyb3cpIi8+JiN4YTsmI3hhOyAgICA8cGF0aCBkPSJNIDM0MCAyMzAgTCA0MDAgMjMwIEwgNDAwIDE3NSBMIDQzMCAxNzUiIG1hcmtlci1lbmQ9InVybCgjYXJyb3cpIi8+JiN4YTsmI3hhOyAgICA8cGF0aCBkPSJNIDQ5MCAxNjAgTCA1MTAgMTYwIEwgNTEwIDI2MCBMIDQ1MCAyNjAiIG1hcmtlci1lbmQ9InVybCgjYXJyb3cpIi8+JiN4YTsgICAgPHRleHQgeD0iNTUwIiB5PSIyMTAiIGZvbnQtZmFtaWx5PSJBcmlhbCIgZm9udC1zaXplPSIxMCIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZmlsbD0iIzMzMyI+b3BlcmFuZHNfcmVhZHk8L3RleHQ+JiN4YTsmI3hhOyAgICA8cGF0aCBkPSJNIDM4MCAxMzUgTCAzODAgMjgwIEwgNDUwIDI4MCIgbWFya2VyLWVuZD0idXJsKCNhcnJvdykiLz4mI3hhOyYjeGE7ICAgIDxwYXRoIGQ9Ik0gNDYwIDIwMCBMIDQ2MCAyMTUgTCAzNDAgMjE1IiBtYXJrZXItZW5kPSJ1cmwoI2Fycm93KSIvPiYjeGE7ICAgIDx0ZXh0IHg9IjQwMCIgeT0iMjEwIiBmb250LWZhbWlseT0iQXJpYWwiIGZvbnQtc2l6ZT0iMTAiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGZpbGw9IiMzMzMiPlNldCByZCAod2I9MSk8L3RleHQ+JiN4YTsmI3hhOyAgICA8cGF0aCBkPSJNIDQ5MCAyNzAgTCA2MjAgMjcwIiBtYXJrZXItZW5kPSJ1cmwoI2Fycm93KSIvPiYjeGE7ICAgIDx0ZXh0IHg9IjU2MCIgeT0iMjY1IiBmb250LWZhbWlseT0iQXJpYWwiIGZvbnQtc2l6ZT0iMTAiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGZpbGw9IiMzMzMiPmFyYl92YWxpZF9pbjwvdGV4dD4mI3hhOyYjeGE7ICAgIDxwYXRoIGQ9Ik0gMzgwIDEyMCBMIDU4MCAxMjAgTCA1ODAgMTgwIEwgNjIwIDE4MCIgbWFya2VyLWVuZD0idXJsKCNhcnJvdykiLz4mI3hhOyAgICA8dGV4dCB4PSI1ODUiIHk9IjE3NSIgZm9udC1mYW1pbHk9IkFyaWFsIiBmb250LXNpemU9IjEwIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBmaWxsPSIjMzMzIj5hcmJfZGF0YV9pbjwvdGV4dD4mI3hhOyYjeGE7ICAgIDxwYXRoIGQ9Ik0gMTQwIDQ3MCBMIDI3MCA0NzAgTCAyNzAgMjUwIiBtYXJrZXItZW5kPSJ1cmwoI2Fycm93LWRhc2hlZCkiIHN0cm9rZT0iIzY2NiIgc3Ryb2tlLWRhc2hhcnJheT0iNSw1Ii8+JiN4YTsgICAgPHRleHQgeD0iMjEwIiB5PSI0NjAiIGZvbnQtZmFtaWx5PSJBcmlhbCIgZm9udC1zaXplPSIxMCIgZmlsbD0iIzY2NiI+Q2xlYXIgcmQgKHdyaXRlYmFja19maXJlKTwvdGV4dD4mI3hhOyYjeGE7ICAgIDxwYXRoIGQ9Ik0gNzQwIDIyNSBMIDgwMCAyMjUiIG1hcmtlci1lbmQ9InVybCgjYXJyb3cpIi8+JiN4YTsgIDwvZz4mI3hhOzwvc3ZnPg==;" vertex="1" parent="1">
+                    <mxGeometry x="80" y="648" width="902" height="552" as="geometry"/>
+                </mxCell>
+                <mxCell id="3" value="" style="group" vertex="1" connectable="0" parent="1">
+                    <mxGeometry x="200" y="140" width="280" height="380" as="geometry"/>
+                </mxCell>
+                <mxCell id="bg_per_warp" value="Per-Warp 分支逻辑 (x PER_ISSUE_WARPS)" style="swimlane;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;startSize=30;fontSize=12;fontStyle=1" parent="3" vertex="1">
+                    <mxGeometry width="280" height="380" as="geometry">
+                        <mxRectangle x="200" y="140" width="280" height="30" as="alternateBounds"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="comp_staging" value="Staging Buffer&#xa;(VX_elastic_buffer)&#xa;屏蔽组合逻辑环" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;" parent="3" vertex="1">
+                    <mxGeometry x="40" y="40" width="200" height="60" as="geometry"/>
+                </mxCell>
+            </root>
+        </mxGraphModel>
+    </diagram>
+</mxfile>

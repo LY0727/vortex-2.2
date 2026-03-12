@@ -38,11 +38,12 @@ module VX_dispatch import VX_gpu_pkg::*; #(
     end
 
     wire [`NT_WIDTH-1:0] last_active_tid;
-
+    // 树形的优先级编码器（高位优先）：从tmask中选出最后一个有效的tid，作为指令的tid。
+    // 对于某些特殊的后续操作（比如特殊写回、或者统计时），知道“谁是最后一个干活的人”很重要。
     VX_find_first #(
         .N (`NUM_THREADS),
         .DATAW (`NT_WIDTH),
-        .REVERSE (1)
+        .REVERSE (1)  //高位优先
     ) last_tid_select (
         .valid_in (operands_if.data.tmask),
         .data_in  (tids),
@@ -52,11 +53,11 @@ module VX_dispatch import VX_gpu_pkg::*; #(
 
     wire [`NUM_EX_UNITS-1:0] operands_reset;
     assign operands_if.ready = operands_reset[operands_if.data.ex_type];
-
+    // 每个执行单元对应一个弹性缓冲区，打拍后送到对应的执行单元接口上。
     for (genvar i = 0; i < `NUM_EX_UNITS; ++i) begin
 
         `RESET_RELAY (buffer_reset, reset);
-
+        // 深度为2的fifo，输出寄存器打拍，使用LUTRAM实现（如果FPGA支持的话），以节省资源。
         VX_elastic_buffer #(
             .DATAW   (DATAW),
             .SIZE    (2),

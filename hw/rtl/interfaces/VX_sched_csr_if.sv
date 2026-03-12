@@ -27,8 +27,8 @@ interface VX_sched_csr_if ();
         output cycles,
         output active_warps,
         output thread_masks,
-        input  alm_empty_wid,
-        output alm_empty,
+        input  alm_empty_wid, // 
+        output alm_empty,     // 只有一条pending指令了,将空
         input  unlock_wid,        
         input  unlock_warp
     );
