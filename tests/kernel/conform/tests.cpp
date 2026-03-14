@@ -360,3 +360,111 @@ int test_tls() {
 	tls_kernel();
 	return check_error(tls_buffer, 0, num_warps);
 }
+
+
+
+
+
+
+/*
+	在Vortex中，处理控制流发散主要有两套机制：一套是基于硬件IPDOM栈的 split-join 机制（适合复杂的嵌套分支和循环）；
+	另一套是基于线程掩码直接修改的 pred（谓词）机制（更加轻量，适合简单的条件执行和无复杂嵌套的循环）。
+*/
+/*
+// 硕士学位论文，if-else结构 和 while结构的 编程范例，标准c语言形式和vortex下的C语言形式对比，用以说明分支发散和循环发散的处理机制。
+// if-else结构的编程范例：
+// 标准C语言形式：
+	if (tid < 2) {
+		// THEN...
+	} else {
+		// ELSE...
+	}
+
+// vortex中C语言形式：
+    int cond1 = tid < 2;
+    int sp1 = vx_split(cond1);
+    if (cond1) 
+		{ THEN... } 
+	else 
+		{ ELSE... }
+    vx_join(sp1);
+
+// while结构的编程范例：
+// 标准C语言形式：
+	while (cond) {
+		// BODY...
+	}	
+
+// vortex中C语言形式： (使用 split-join指令实现)
+	int sp;	
+l_loop:
+	sp = vx_split(cond);
+	if (cond) {
+		// BODY...  (cond更新，形成嵌套)
+		goto l_loop;
+	}
+	vx_join(sp);
+
+// vortex中C语言形式： (基于线程掩码的 pred指令实现)
+    int orig_tmask = vx_active_threads(); // 1. 保存进入循环前的活跃线程掩码状态
+l_loop:
+    vx_pred(cond, orig_tmask);            // 2. 结合条件更新掩码：当前TMC = orig_tmask & (满足cond的线程)
+    if (vx_active_threads() != 0) {       // 3. 如果Warp中还有任意一个线程的 cond 为真，则全Warp继续循环
+        // BODY... (cond更新，无嵌套)
+        goto l_loop;                      // 4. 跳转回循环开头重新计算预测
+    }
+    vx_tmc(orig_tmask);                   // 5. 循环结束，恢复初始的线程掩码，确保收敛
+*/
+/*
+
+// 标准C语言形式：
+	if (tid < 2) {      
+		// THEN...      			
+	} else {
+		// ELSE...      
+	}
+
+
+
+
+// 基于split-join指令实现
+    int cond1 = tid < 2;
+    int sp1 = vx_split(cond1);		
+    if (cond1) 
+		{ THEN... } 
+	else 
+		{ ELSE... }
+    vx_join(sp1);
+
+
+
+
+// 标准C语言形式：
+	while (cond) {						
+		// BODY...
+	}	
+
+
+
+// 基于split-join指令实现
+	int sp;	
+l_loop:
+	sp = vx_split(cond);
+	if (cond) {
+		// BODY...  (cond更新，形成嵌套)	
+		goto l_loop;
+	}
+	vx_join(sp);
+
+// 基于线程掩码的pred指令实现
+    int orig_tmask = active_threads(); 		
+l_loop:
+    pred(cond, orig_tmask);            
+    if (active_threads() != 0) {       
+        // BODY... (cond更新，无嵌套)
+        goto l_loop;                      
+    }
+    tmc(orig_tmask); 
+	
+	
+*/

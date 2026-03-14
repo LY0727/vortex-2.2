@@ -738,13 +738,13 @@
 
 // ISA Extensions /////////////////////////////////////////////////////////////
 
-`ifdef EXT_A_ENABLE
+`ifdef EXT_A_ENABLE         // SIMX中有完整A扩展的解码执行路径，RTL中没有实现。
     `define EXT_A_ENABLED   1
 `else
     `define EXT_A_ENABLED   0
 `endif
 
-`ifdef EXT_C_ENABLE
+`ifdef EXT_C_ENABLE         // 预留位，SIMX和rtl中都没有支持
     `define EXT_C_ENABLED   1
 `else
     `define EXT_C_ENABLED   0
@@ -768,7 +768,7 @@
     `define EXT_M_ENABLED   0
 `endif
 
-`ifdef EXT_ZICOND_ENABLE
+`ifdef EXT_ZICOND_ENABLE       // 两条条件置零指令，SIMX和rtl都有完整的解码执行路径。默认启用。
     `define EXT_ZICOND_ENABLED 1
 `else
     `define EXT_ZICOND_ENABLED 0
