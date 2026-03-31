@@ -1,0 +1,30 @@
+ 
+****************************************
+Report : area
+Design : VX_core_top
+Version: T-2022.03-SP2
+Date   : Sat Mar 28 03:35:53 2026
+****************************************
+
+Library(s) Used:
+
+    scc40nll_hdc50_lvt_ff_v1p21_0c_basic (File: /home/lao/works/backend-example/test/lib/scc40nll_hdc50_lvt_ff_v1p21_0c_basic.db)
+
+Number of ports:                       362419
+Number of nets:                        960022
+Number of cells:                       685799
+Number of combinational cells:         476567
+Number of sequential cells:            203339
+Number of macros/black boxes:               0
+Number of buf/inv:                      70191
+Number of references:                       1
+
+Combinational area:             566646.595653
+Buf/Inv area:                    32731.406206
+Noncombinational area:          692389.262641
+Macro/Black Box area:                0.000000
+Net Interconnect area:      undefined  (No wire load specified)
+
+Total cell area:               1259035.858294
+Total area:                 undefined
+1

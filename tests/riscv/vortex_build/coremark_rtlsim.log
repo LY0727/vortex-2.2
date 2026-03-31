@@ -1,0 +1,17 @@
+Running /home/zhd/coremark/vortex_build/coremark_vortex.bin...
+WATCHPOINT: write to 0x80002dd8, from addr=0x80000000, size=24948, data_byte=0x63
+#0: 2K performance run parameters for coremark.
+#0: CoreMark Size    : 666
+#0: Total ticks      : 4207382886
+#0: Total time (secs): 16
+#0: Iterations/Sec   : 37
+#0: Iterations       : 600
+#0: Compiler version : GCC12.2.0
+#0: Compiler flags   : -O3
+#0: Memory location  : STACK
+#0: seedcrc          : 0xe9f5
+#0: [0]crclist       : 0xe714
+#0: [0]crcmatrix     : 0x1fd7
+#0: [0]crcstate      : 0x8e3a
+#0: [0]crcfinal      : 0xbd59
+#0: Correct operation validated. See README.md for run and reporting rules.

@@ -362,33 +362,3 @@ inline void vx_fence() {
 #endif
 
 #endif // __VX_INTRINSICS_H__
-
-
-
-
-// inline void vx_tmc(int thread_mask) {
-//     __asm__ volatile (".insn r %0, 0, 0, x0, %1, x0" :: "i"(RISCV_CUSTOM0), "r"(thread_mask));
-// }
-
-// inline void vx_pred(int condition, int thread_mask) {
-//     __asm__ volatile (".insn r %0, 5, 0, x0, %1, %2" :: "i"(RISCV_CUSTOM0), "r"(condition), "r"(thread_mask));
-// }
-
-// typedef void (*vx_wspawn_pfn)();
-// inline void vx_wspawn(int num_warps, vx_wspawn_pfn func_ptr) {
-//     __asm__ volatile (".insn r %0, 1, 0, x0, %1, %2" :: "i"(RISCV_CUSTOM0), "r"(num_warps), "r"(func_ptr));
-// }
-
-// inline int vx_split(int predicate) {
-//     int ret;
-//     __asm__ volatile (".insn r %1, 2, 0, %0, %2, x0" : "=r"(ret) : "i"(RISCV_CUSTOM0), "r"(predicate));
-//     return ret;
-// }
-
-// inline void vx_join(int stack_ptr) {
-//     __asm__ volatile (".insn r %0, 3, 0, x0, %1, x0" :: "i"(RISCV_CUSTOM0), "r"(stack_ptr));
-// }
-
-// inline void vx_barrier(int barried_id, int num_warps) {
-//     __asm__ volatile (".insn r %0, 4, 0, x0, %1, %2" :: "i"(RISCV_CUSTOM0), "r"(barried_id), "r"(num_warps));
-// }

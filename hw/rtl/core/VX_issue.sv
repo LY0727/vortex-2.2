@@ -76,7 +76,12 @@ module VX_issue import VX_gpu_pkg::*; #(
     `ifndef L1_ENABLE
         assign decode_if.ibuf_pop[issue_id * PER_ISSUE_WARPS +: PER_ISSUE_WARPS] = per_issue_decode_if.ibuf_pop;
     `endif
-
+    // 自行修改
+    // `ifndef L1_ENABLE
+    //     for (genvar wis = 0; wis < PER_ISSUE_WARPS; ++wis) begin
+    //         assign decode_if.ibuf_pop[(wis << ISSUE_ISW) + issue_id] = per_issue_decode_if.ibuf_pop[wis];
+    //     end
+    // `endif
         `RESET_RELAY (slice_reset, reset);
 
         VX_issue_slice #(

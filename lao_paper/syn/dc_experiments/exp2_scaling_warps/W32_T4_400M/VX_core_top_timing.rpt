@@ -1,0 +1,170 @@
+Information: Updating design information... (UID-85)
+Warning: Design 'VX_core_top' contains 1 high-fanout nets. A fanout number of 1000 will be used for delay calculations involving these nets. (TIM-134)
+ 
+****************************************
+Report : timing
+        -path full
+        -delay max
+        -max_paths 1
+Design : VX_core_top
+Version: T-2022.03-SP2
+Date   : Sat Mar 28 03:35:53 2026
+****************************************
+
+ # A fanout number of 1000 was used for high fanout net computations.
+
+Operating Conditions: ff_v1p21_0c   Library: scc40nll_hdc50_lvt_ff_v1p21_0c_basic
+Wire Load Model Mode: top
+
+  Startpoint: core/issue/issue_slices[1].issue_slice/dispatch/genblk2[0].buffer/genblk1.out_buf/genblk1.genblk1[0].pipe_register/genblk1.genblk1.genblk1.value_d_reg[427]
+              (rising edge-triggered flip-flop clocked by VCLK)
+  Endpoint: core/execute/alu_unit/genblk1[1].alu_int/rsp_buf/genblk1.pipe_buffer/genblk1.genblk1[0].pipe_register/genblk1.genblk1.genblk1.value_d_reg[196]
+            (rising edge-triggered flip-flop clocked by VCLK)
+  Path Group: VCLK
+  Path Type: max
+
+  Point                                                   Incr       Path
+  --------------------------------------------------------------------------
+  clock VCLK (rise edge)                                  0.00       0.00
+  clock network delay (ideal)                             0.00       0.00
+  core/issue/issue_slices[1].issue_slice/dispatch/genblk2[0].buffer/genblk1.out_buf/genblk1.genblk1[0].pipe_register/genblk1.genblk1.genblk1.value_d_reg[427]/CK (DQV2_8TL50)
+                                                          0.00 #     0.00 r
+  core/issue/issue_slices[1].issue_slice/dispatch/genblk2[0].buffer/genblk1.out_buf/genblk1.genblk1[0].pipe_register/genblk1.genblk1.genblk1.value_d_reg[427]/Q (DQV2_8TL50)
+                                                          0.10       0.10 f
+  core/issue/issue_slices[1].issue_slice/dispatch/genblk2[0].buffer/genblk1.out_buf/genblk1.genblk1[0].pipe_register/data_out[427] (VX_pipe_register_DATAW516_RESETW1_10)
+                                                          0.00       0.10 f
+  core/issue/issue_slices[1].issue_slice/dispatch/genblk2[0].buffer/genblk1.out_buf/data_out[427] (VX_pipe_buffer_DATAW515_DEPTH1_10)
+                                                          0.00       0.10 f
+  core/issue/issue_slices[1].issue_slice/dispatch/genblk2[0].buffer/data_out[427] (VX_elastic_buffer_DATAW515_SIZE2_OUT_REG2_LUTRAM1_10)
+                                                          0.00       0.10 f
+  core/issue/issue_slices[1].issue_slice/dispatch/dispatch_if[0].data[op_args][35] (VX_dispatch_INSTANCE_ID_I_operands_if_VX_operands_if__I_dispatch_if_VX_dispatch_if_master__2)
+                                                          0.00       0.10 f
+  core/issue/issue_slices[1].issue_slice/dispatch_if[0].data[op_args][35] (VX_issue_slice_INSTANCE_ID_ISSUE_ID1_I_decode_if_VX_decode_if__NUM_WARPS_8I_writeback_if_VX_writeback_if_slave_I_dispatch_if_VX_dispatch_if__)
+                                                          0.00       0.10 f
+  core/issue/dispatch_if[1].data[op_args][35] (VX_issue_INSTANCE_ID_I_decode_if_VX_decode_if__I_writeback_if_VX_writeback_if__I_dispatch_if_VX_dispatch_if__)
+                                                          0.00       0.10 f
+  core/execute/dispatch_if[1].data[op_args][35] (VX_execute_INSTANCE_ID_CORE_ID0_I_lsu_mem_if_VX_lsu_mem_if__NUM_LANES_4_DATA_SIZE_4_TAG_WIDTH_45I_dispatch_if_VX_dispatch_if__I_commit_if_VX_commit_if__I_sched_csr_if_VX_sched_csr_if__I_branch_ctl_if_VX_branch_ctl_if__I_warp_ctl_if_VX_warp_ctl_if__I_commit_csr_if_VX_commit_csr_if__)
+                                                          0.00       0.10 f
+  core/execute/alu_unit/dispatch_if[1].data[op_args][35] (VX_alu_unit_INSTANCE_ID_I_dispatch_if_VX_dispatch_if__I_commit_if_VX_commit_if__I_branch_ctl_if_VX_branch_ctl_if_master_)
+                                                          0.00       0.10 f
+  core/execute/alu_unit/dispatch_unit/dispatch_if[1].data[op_args][35] (VX_dispatch_unit_BLOCK_SIZE4_NUM_LANES4_OUT_BUF0_I_dispatch_if_VX_dispatch_if_slave_I_execute_if_VX_execute_if__NUM_LANES_4)
+                                                          0.00       0.10 f
+  core/execute/alu_unit/dispatch_unit/genblk3[1].buf_out/data_in[430] (VX_elastic_buffer_DATAW520_SIZE0_OUT_REG0_2)
+                                                          0.00       0.10 f
+  core/execute/alu_unit/dispatch_unit/genblk3[1].buf_out/data_out[430] (VX_elastic_buffer_DATAW520_SIZE0_OUT_REG0_2)
+                                                          0.00       0.10 f
+  core/execute/alu_unit/dispatch_unit/execute_if[1].data[op_args][35] (VX_dispatch_unit_BLOCK_SIZE4_NUM_LANES4_OUT_BUF0_I_dispatch_if_VX_dispatch_if_slave_I_execute_if_VX_execute_if__NUM_LANES_4)
+                                                          0.00       0.10 f
+  core/execute/alu_unit/genblk1[1].alu_int/execute_if.data[op_args][35] (VX_alu_int_INSTANCE_ID_BLOCK_IDX1_NUM_LANES4_I_execute_if_VX_execute_if__NUM_LANES_4I_commit_if_VX_commit_if__NUM_LANES_4I_branch_ctl_if_VX_branch_ctl_if_master_)
+                                                          0.00       0.10 f
+  core/execute/alu_unit/genblk1[1].alu_int/U128/ZN (INV2_8TL50)
+                                                          0.07       0.18 r
+  core/execute/alu_unit/genblk1[1].alu_int/U265/ZN (INV4_8TL50)
+                                                          0.04       0.21 f
+  core/execute/alu_unit/genblk1[1].alu_int/U34/Z (AND2V2_8TL50)
+                                                          0.04       0.26 f
+  core/execute/alu_unit/genblk1[1].alu_int/U403/ZN (NOR2V2_8TL50)
+                                                          0.03       0.29 r
+  core/execute/alu_unit/genblk1[1].alu_int/U655/ZN (NOR2V2_8TL50)
+                                                          0.02       0.31 f
+  core/execute/alu_unit/genblk1[1].alu_int/U26/ZN (INV2_8TL50)
+                                                          0.06       0.37 r
+  core/execute/alu_unit/genblk1[1].alu_int/U49/Z (BUFV2_8TL50)
+                                                          0.07       0.44 r
+  core/execute/alu_unit/genblk1[1].alu_int/U48/ZN (INV2_8TL50)
+                                                          0.05       0.50 f
+  core/execute/alu_unit/genblk1[1].alu_int/U47/Z (AND2V2_8TL50)
+                                                          0.04       0.54 f
+  core/execute/alu_unit/genblk1[1].alu_int/DP_OP_169J6_130_5719/U32/CO (AD1V2C_8TL50)
+                                                          0.05       0.59 f
+  core/execute/alu_unit/genblk1[1].alu_int/DP_OP_169J6_130_5719/U31/CO (AD1V2C_8TL50)
+                                                          0.05       0.65 f
+  core/execute/alu_unit/genblk1[1].alu_int/DP_OP_169J6_130_5719/U30/CO (AD1V2C_8TL50)
+                                                          0.05       0.70 f
+  core/execute/alu_unit/genblk1[1].alu_int/DP_OP_169J6_130_5719/U29/CO (AD1V2C_8TL50)
+                                                          0.05       0.75 f
+  core/execute/alu_unit/genblk1[1].alu_int/DP_OP_169J6_130_5719/U28/CO (AD1V2C_8TL50)
+                                                          0.05       0.81 f
+  core/execute/alu_unit/genblk1[1].alu_int/DP_OP_169J6_130_5719/U27/CO (AD1V2C_8TL50)
+                                                          0.05       0.86 f
+  core/execute/alu_unit/genblk1[1].alu_int/DP_OP_169J6_130_5719/U26/CO (AD1V2C_8TL50)
+                                                          0.05       0.92 f
+  core/execute/alu_unit/genblk1[1].alu_int/DP_OP_169J6_130_5719/U25/CO (AD1V2C_8TL50)
+                                                          0.05       0.97 f
+  core/execute/alu_unit/genblk1[1].alu_int/DP_OP_169J6_130_5719/U24/CO (AD1V2C_8TL50)
+                                                          0.05       1.02 f
+  core/execute/alu_unit/genblk1[1].alu_int/DP_OP_169J6_130_5719/U23/CO (AD1V2C_8TL50)
+                                                          0.05       1.08 f
+  core/execute/alu_unit/genblk1[1].alu_int/DP_OP_169J6_130_5719/U22/CO (AD1V2C_8TL50)
+                                                          0.05       1.13 f
+  core/execute/alu_unit/genblk1[1].alu_int/DP_OP_169J6_130_5719/U21/CO (AD1V2C_8TL50)
+                                                          0.05       1.19 f
+  core/execute/alu_unit/genblk1[1].alu_int/DP_OP_169J6_130_5719/U20/CO (AD1V2C_8TL50)
+                                                          0.05       1.24 f
+  core/execute/alu_unit/genblk1[1].alu_int/DP_OP_169J6_130_5719/U19/CO (AD1V2C_8TL50)
+                                                          0.05       1.29 f
+  core/execute/alu_unit/genblk1[1].alu_int/DP_OP_169J6_130_5719/U18/CO (AD1V2C_8TL50)
+                                                          0.05       1.35 f
+  core/execute/alu_unit/genblk1[1].alu_int/DP_OP_169J6_130_5719/U17/CO (AD1V2C_8TL50)
+                                                          0.05       1.40 f
+  core/execute/alu_unit/genblk1[1].alu_int/DP_OP_169J6_130_5719/U16/CO (AD1V2C_8TL50)
+                                                          0.05       1.46 f
+  core/execute/alu_unit/genblk1[1].alu_int/DP_OP_169J6_130_5719/U15/CO (AD1V2C_8TL50)
+                                                          0.05       1.51 f
+  core/execute/alu_unit/genblk1[1].alu_int/DP_OP_169J6_130_5719/U14/CO (AD1V2C_8TL50)
+                                                          0.05       1.56 f
+  core/execute/alu_unit/genblk1[1].alu_int/DP_OP_169J6_130_5719/U13/CO (AD1V2C_8TL50)
+                                                          0.05       1.62 f
+  core/execute/alu_unit/genblk1[1].alu_int/DP_OP_169J6_130_5719/U12/CO (AD1V2C_8TL50)
+                                                          0.05       1.67 f
+  core/execute/alu_unit/genblk1[1].alu_int/DP_OP_169J6_130_5719/U11/CO (AD1V2C_8TL50)
+                                                          0.05       1.73 f
+  core/execute/alu_unit/genblk1[1].alu_int/DP_OP_169J6_130_5719/U10/CO (AD1V2C_8TL50)
+                                                          0.05       1.78 f
+  core/execute/alu_unit/genblk1[1].alu_int/DP_OP_169J6_130_5719/U9/CO (AD1V2C_8TL50)
+                                                          0.05       1.83 f
+  core/execute/alu_unit/genblk1[1].alu_int/DP_OP_169J6_130_5719/U8/CO (AD1V2C_8TL50)
+                                                          0.05       1.89 f
+  core/execute/alu_unit/genblk1[1].alu_int/DP_OP_169J6_130_5719/U7/CO (AD1V2C_8TL50)
+                                                          0.05       1.94 f
+  core/execute/alu_unit/genblk1[1].alu_int/DP_OP_169J6_130_5719/U6/CO (AD1V2C_8TL50)
+                                                          0.05       2.00 f
+  core/execute/alu_unit/genblk1[1].alu_int/DP_OP_169J6_130_5719/U5/CO (AD1V2C_8TL50)
+                                                          0.05       2.05 f
+  core/execute/alu_unit/genblk1[1].alu_int/DP_OP_169J6_130_5719/U4/CO (AD1V2C_8TL50)
+                                                          0.05       2.11 f
+  core/execute/alu_unit/genblk1[1].alu_int/DP_OP_169J6_130_5719/U3/CO (AD1V2C_8TL50)
+                                                          0.05       2.15 f
+  core/execute/alu_unit/genblk1[1].alu_int/U2536/Z (XOR2V2_8TL50)
+                                                          0.04       2.20 f
+  core/execute/alu_unit/genblk1[1].alu_int/U2550/ZN (AOI211V2_8TL50)
+                                                          0.04       2.24 r
+  core/execute/alu_unit/genblk1[1].alu_int/U2551/ZN (INAND2V2_8TL50)
+                                                          0.01       2.25 f
+  core/execute/alu_unit/genblk1[1].alu_int/rsp_buf/data_in[196] (VX_elastic_buffer_DATAW259_2)
+                                                          0.00       2.25 f
+  core/execute/alu_unit/genblk1[1].alu_int/rsp_buf/genblk1.pipe_buffer/data_in[196] (VX_pipe_buffer_DATAW259_2)
+                                                          0.00       2.25 f
+  core/execute/alu_unit/genblk1[1].alu_int/rsp_buf/genblk1.pipe_buffer/genblk1.genblk1[0].pipe_register/data_in[196] (VX_pipe_register_DATAW260_RESETW1_2)
+                                                          0.00       2.25 f
+  core/execute/alu_unit/genblk1[1].alu_int/rsp_buf/genblk1.pipe_buffer/genblk1.genblk1[0].pipe_register/U17/Z (AO22V2_8TL50)
+                                                          0.05       2.30 f
+  core/execute/alu_unit/genblk1[1].alu_int/rsp_buf/genblk1.pipe_buffer/genblk1.genblk1[0].pipe_register/genblk1.genblk1.genblk1.value_d_reg[196]/D (DQV2_8TL50)
+                                                          0.00       2.30 f
+  data arrival time                                                  2.30
+
+  clock VCLK (rise edge)                                  2.50       2.50
+  clock network delay (ideal)                             0.00       2.50
+  clock uncertainty                                      -0.20       2.30
+  core/execute/alu_unit/genblk1[1].alu_int/rsp_buf/genblk1.pipe_buffer/genblk1.genblk1[0].pipe_register/genblk1.genblk1.genblk1.value_d_reg[196]/CK (DQV2_8TL50)
+                                                          0.00       2.30 r
+  library setup time                                      0.00       2.30
+  data required time                                                 2.30
+  --------------------------------------------------------------------------
+  data required time                                                 2.30
+  data arrival time                                                 -2.30
+  --------------------------------------------------------------------------
+  slack (MET)                                                        0.00
+
+
+1

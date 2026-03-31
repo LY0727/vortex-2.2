@@ -31,8 +31,9 @@
 // --- 2. 处理器微架构 (核心/线程分配) ---
 // `define NUM_CLUSTERS 1       // 集群(Cluster)数量，默认 1
 // `define NUM_CORES 1          // 每集群的核心(Core)数量，默认 1
-// `define NUM_WARPS 4          // 每核心的 Warp (线程束)数量，默认 4
-// `define NUM_THREADS 4        // 每 Warp 的 Thread 数量，默认 4
+`define NUM_WARPS 4         // 每核心的 Warp (线程束)数量，默认 4
+`define NUM_THREADS 4       // 每 Warp 的 Thread 数量，默认 4
+`define ISSUE_WIDTH     `UP(`NUM_WARPS / 8)
 
 // --- 3. 缓存层次结构配置 ---
 `define L1_DISABLE           // 禁用 L1 Cache (I-Cache & D-Cache)(默认启用)
@@ -50,7 +51,6 @@
 // `define SYNTHESIS            // 标记为综合模式 (屏蔽仿真专用的 DPI 代码)
 // `define DEBUG_LEVEL 3        // 仿真输出的详细等级，默认 3
 // `define DPI_DISABLE          // 禁用 SystemVerilog DPI 接口
-
 
 /*===================================================
 1. 宏工具函数
@@ -143,11 +143,11 @@
 `endif
 
 `ifndef NUM_WARPS
-`define NUM_WARPS 16
+`define NUM_WARPS 4
 `endif
 
 `ifndef NUM_THREADS
-`define NUM_THREADS 16
+`define NUM_THREADS 4
 `endif
     // barrier 为什么是warps的一半；看schedule.sv
 `ifndef NUM_BARRIERS
@@ -337,7 +337,7 @@
     Icache、Dcache、L2cache、L3cache、LMEM的配置
     ISA扩展
 ====================================================*/
-// Issue width  发射宽度是指每周期发出指令数。
+// Issue width  发射宽度是指可以同时执行的warp数,这样执行单元也要加
 `ifndef ISSUE_WIDTH
 `define ISSUE_WIDTH     `UP(`NUM_WARPS / 8)
 `endif
@@ -381,17 +381,17 @@
 `define IBUF_SIZE   4
 `endif
 
-// LSU line size    line数 * 每指令字节数(也就是core侧实际发出的数据请求宽度) 与 cache行大小（64words）(也就是总线侧一次能读出的数据宽度)
+// LSU line size    line数 * 每指令字节数 * cache行大小（64words）
 `ifndef LSU_LINE_SIZE
 `define LSU_LINE_SIZE   `MIN(`NUM_LSU_LANES * (`XLEN / 8), `L1_LINE_SIZE)
 `endif
 
-// Size of LSU Core Request Queue  core侧未完成的访存请求的pending深度,也就是lsu内的缓冲池深度. 关键系数是2.
+// Size of LSU Core Request Queue
 `ifndef LSUQ_IN_SIZE
 `define LSUQ_IN_SIZE    (2 * (`NUM_THREADS / `NUM_LSU_LANES))
 `endif
 
-// Size of LSU Memory Request Queue   总线侧未完成的访存请求的pending深度,
+// Size of LSU Memory Request Queue
 `ifndef LSUQ_OUT_SIZE
 `define LSUQ_OUT_SIZE   `MAX(`LSUQ_IN_SIZE, `LSU_LINE_SIZE / (`XLEN / 8))
 `endif
@@ -521,7 +521,7 @@
 
 // Icache Configurable Knobs //////////////////////////////////////////////////
 
-// Cache Enable   默认设置icache
+// Cache Enable
 `ifndef ICACHE_DISABLE
 `define ICACHE_ENABLE
 `endif
@@ -562,14 +562,14 @@
 `define ICACHE_MRSQ_SIZE 0
 `endif
 
-// Number of Associative Ways  默认直接映射！
+// Number of Associative Ways
 `ifndef ICACHE_NUM_WAYS
 `define ICACHE_NUM_WAYS 1
 `endif
 
 // Dcache Configurable Knobs //////////////////////////////////////////////////
 
-// Cache Enable  默认设置dcache 16KB
+// Cache Enable
 `ifndef DCACHE_DISABLE
 `define DCACHE_ENABLE
 `endif
@@ -616,7 +616,7 @@
 `define DCACHE_MRSQ_SIZE 0
 `endif
 
-// Number of Associative Ways   默认直接映射！
+// Number of Associative Ways
 `ifndef DCACHE_NUM_WAYS
 `define DCACHE_NUM_WAYS 1
 `endif
@@ -738,13 +738,13 @@
 
 // ISA Extensions /////////////////////////////////////////////////////////////
 
-`ifdef EXT_A_ENABLE         // SIMX中有完整A扩展的解码执行路径，RTL中没有实现。
+`ifdef EXT_A_ENABLE
     `define EXT_A_ENABLED   1
 `else
     `define EXT_A_ENABLED   0
 `endif
 
-`ifdef EXT_C_ENABLE         // 预留位，SIMX和rtl中都没有支持
+`ifdef EXT_C_ENABLE
     `define EXT_C_ENABLED   1
 `else
     `define EXT_C_ENABLED   0
@@ -768,7 +768,7 @@
     `define EXT_M_ENABLED   0
 `endif
 
-`ifdef EXT_ZICOND_ENABLE       // 两条条件置零指令，SIMX和rtl都有完整的解码执行路径。默认启用。
+`ifdef EXT_ZICOND_ENABLE
     `define EXT_ZICOND_ENABLED 1
 `else
     `define EXT_ZICOND_ENABLED 0

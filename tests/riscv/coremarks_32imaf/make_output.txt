@@ -1,0 +1,13 @@
+/mnt/ssd2/lao/vortex-tools/riscv32-gnu-toolchain/bin/riscv32-unknown-elf-gcc -O3 -funroll-all-loops -march=rv32imaf_zicsr -mabi=ilp32f -mcmodel=medany -fno-exceptions -ffreestanding  -DITERATIONS=100  -I../../../kernel/include -I../../../build/hw core_list_join.c core_main.c core_matrix.c core_state.c core_util.c core_portme.c -o coremark.elf -nostartfiles -Wl,-Bstatic,--gc-sections,-T,../../../kernel/scripts/link32.ld,--defsym=STARTUP_ADDR=0x80000000 -L../../../build/kernel -lvortex
+core_matrix.c: In function 'core_init_matrix':
+core_matrix.c:217:34: warning: passing argument 1 of 'align_mem' from incompatible pointer type [-Wincompatible-pointer-types]
+  217 |     p->C = (MATRES *)align_mem(B + N * N);
+      |                                ~~^~~~~~~
+      |                                  |
+      |                                  MATDAT * {aka short int *}
+In file included from coremark.h:38,
+                 from core_matrix.c:19:
+core_portme.h:61:25: note: expected 'ee_u8 *' {aka 'unsigned char *'} but argument is of type 'MATDAT *' {aka 'short int *'}
+   61 | ee_u8 *align_mem(ee_u8 *b1);
+      |                  ~~~~~~~^~
+/mnt/ssd2/lao/vortex-tools/riscv32-gnu-toolchain/bin/riscv32-unknown-elf-objcopy -O binary coremark.elf coremark.bin

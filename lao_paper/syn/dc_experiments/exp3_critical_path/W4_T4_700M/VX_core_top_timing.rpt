@@ -1,0 +1,122 @@
+Information: Updating design information... (UID-85)
+Warning: Design 'VX_core_top' contains 1 high-fanout nets. A fanout number of 1000 will be used for delay calculations involving these nets. (TIM-134)
+ 
+****************************************
+Report : timing
+        -path full
+        -delay max
+        -max_paths 1
+Design : VX_core_top
+Version: T-2022.03-SP2
+Date   : Sat Mar 28 05:18:38 2026
+****************************************
+
+ # A fanout number of 1000 was used for high fanout net computations.
+
+Operating Conditions: ff_v1p21_0c   Library: scc40nll_hdc50_lvt_ff_v1p21_0c_basic
+Wire Load Model Mode: top
+
+  Startpoint: core/execute/alu_unit/genblk1[0].muldiv_unit/serial_div/denom_r_reg[0][0]
+              (rising edge-triggered flip-flop clocked by VCLK)
+  Endpoint: core/execute/alu_unit/genblk1[0].muldiv_unit/serial_div/working_reg[0][33]
+            (rising edge-triggered flip-flop clocked by VCLK)
+  Path Group: VCLK
+  Path Type: max
+
+  Point                                                   Incr       Path
+  --------------------------------------------------------------------------
+  clock VCLK (rise edge)                                  0.00       0.00
+  clock network delay (ideal)                             0.00       0.00
+  core/execute/alu_unit/genblk1[0].muldiv_unit/serial_div/denom_r_reg[0][0]/CK (DQV2_8TL50)
+                                                          0.00 #     0.00 r
+  core/execute/alu_unit/genblk1[0].muldiv_unit/serial_div/denom_r_reg[0][0]/Q (DQV2_8TL50)
+                                                          0.09       0.09 r
+  core/execute/alu_unit/genblk1[0].muldiv_unit/serial_div/U620/ZN (INV2_8TL50)
+                                                          0.01       0.10 f
+  core/execute/alu_unit/genblk1[0].muldiv_unit/serial_div/U621/ZN (NOR2V2_8TL50)
+                                                          0.03       0.12 r
+  core/execute/alu_unit/genblk1[0].muldiv_unit/serial_div/U623/ZN (OAI21V2_8TL50)
+                                                          0.02       0.15 f
+  core/execute/alu_unit/genblk1[0].muldiv_unit/serial_div/U627/ZN (AOI21V2_8TL50)
+                                                          0.04       0.18 r
+  core/execute/alu_unit/genblk1[0].muldiv_unit/serial_div/U641/ZN (OAI21V2_8TL50)
+                                                          0.02       0.20 f
+  core/execute/alu_unit/genblk1[0].muldiv_unit/serial_div/U646/ZN (AOI21V2_8TL50)
+                                                          0.03       0.24 r
+  core/execute/alu_unit/genblk1[0].muldiv_unit/serial_div/U650/ZN (OAI21V2_8TL50)
+                                                          0.02       0.26 f
+  core/execute/alu_unit/genblk1[0].muldiv_unit/serial_div/U655/ZN (AOI21V2_8TL50)
+                                                          0.03       0.30 r
+  core/execute/alu_unit/genblk1[0].muldiv_unit/serial_div/U659/ZN (OAI21V2_8TL50)
+                                                          0.02       0.32 f
+  core/execute/alu_unit/genblk1[0].muldiv_unit/serial_div/U255/ZN (AOI21V2_8TL50)
+                                                          0.03       0.35 r
+  core/execute/alu_unit/genblk1[0].muldiv_unit/serial_div/U38/ZN (OAI21V2_8TL50)
+                                                          0.02       0.38 f
+  core/execute/alu_unit/genblk1[0].muldiv_unit/serial_div/U378/ZN (AOI21V2_8TL50)
+                                                          0.03       0.41 r
+  core/execute/alu_unit/genblk1[0].muldiv_unit/serial_div/U36/ZN (OAI21V2_8TL50)
+                                                          0.02       0.43 f
+  core/execute/alu_unit/genblk1[0].muldiv_unit/serial_div/U252/ZN (AOI21V2_8TL50)
+                                                          0.03       0.47 r
+  core/execute/alu_unit/genblk1[0].muldiv_unit/serial_div/U250/ZN (OAI21V2_8TL50)
+                                                          0.02       0.49 f
+  core/execute/alu_unit/genblk1[0].muldiv_unit/serial_div/U248/ZN (AOI21V2_8TL50)
+                                                          0.03       0.53 r
+  core/execute/alu_unit/genblk1[0].muldiv_unit/serial_div/U246/ZN (OAI21V2_8TL50)
+                                                          0.02       0.55 f
+  core/execute/alu_unit/genblk1[0].muldiv_unit/serial_div/U244/ZN (AOI21V2_8TL50)
+                                                          0.03       0.59 r
+  core/execute/alu_unit/genblk1[0].muldiv_unit/serial_div/U377/ZN (OAI21V2_8TL50)
+                                                          0.02       0.61 f
+  core/execute/alu_unit/genblk1[0].muldiv_unit/serial_div/U241/ZN (AOI21V2_8TL50)
+                                                          0.03       0.64 r
+  core/execute/alu_unit/genblk1[0].muldiv_unit/serial_div/U239/ZN (OAI21V2_8TL50)
+                                                          0.02       0.67 f
+  core/execute/alu_unit/genblk1[0].muldiv_unit/serial_div/U237/ZN (AOI21V2_8TL50)
+                                                          0.03       0.70 r
+  core/execute/alu_unit/genblk1[0].muldiv_unit/serial_div/U32/ZN (OAI21V2_8TL50)
+                                                          0.02       0.72 f
+  core/execute/alu_unit/genblk1[0].muldiv_unit/serial_div/U688/Z (AO21V4_8TL50)
+                                                          0.04       0.77 f
+  core/execute/alu_unit/genblk1[0].muldiv_unit/serial_div/U1573/CO (AD1V2C_8TL50)
+                                                          0.05       0.81 f
+  core/execute/alu_unit/genblk1[0].muldiv_unit/serial_div/U1570/CO (AD1V2T_8TL50)
+                                                          0.05       0.86 f
+  core/execute/alu_unit/genblk1[0].muldiv_unit/serial_div/U27/CO (AD1V2R_8TL50)
+                                                          0.04       0.91 f
+  core/execute/alu_unit/genblk1[0].muldiv_unit/serial_div/U46/CO (AD1V2C_8TL50)
+                                                          0.06       0.96 f
+  core/execute/alu_unit/genblk1[0].muldiv_unit/serial_div/U235/CO (AD1V2C_8TL50)
+                                                          0.05       1.01 f
+  core/execute/alu_unit/genblk1[0].muldiv_unit/serial_div/U1568/CO (AD1V2T_8TL50)
+                                                          0.05       1.06 f
+  core/execute/alu_unit/genblk1[0].muldiv_unit/serial_div/U51/ZN (XNOR2V4_8TL50)
+                                                          0.04       1.10 f
+  core/execute/alu_unit/genblk1[0].muldiv_unit/serial_div/U25/Z (AND2V4_8TL50)
+                                                          0.03       1.13 f
+  core/execute/alu_unit/genblk1[0].muldiv_unit/serial_div/U22/ZN (INV4_8TL50)
+                                                          0.01       1.14 r
+  core/execute/alu_unit/genblk1[0].muldiv_unit/serial_div/U3/ZN (INV4_8TL50)
+                                                          0.02       1.15 f
+  core/execute/alu_unit/genblk1[0].muldiv_unit/serial_div/U831/Z (AO222V2_8TL50)
+                                                          0.08       1.23 f
+  core/execute/alu_unit/genblk1[0].muldiv_unit/serial_div/working_reg[0][33]/D (DQV2_8TL50)
+                                                          0.00       1.23 f
+  data arrival time                                                  1.23
+
+  clock VCLK (rise edge)                                  1.43       1.43
+  clock network delay (ideal)                             0.00       1.43
+  clock uncertainty                                      -0.20       1.23
+  core/execute/alu_unit/genblk1[0].muldiv_unit/serial_div/working_reg[0][33]/CK (DQV2_8TL50)
+                                                          0.00       1.23 r
+  library setup time                                      0.00       1.23
+  data required time                                                 1.23
+  --------------------------------------------------------------------------
+  data required time                                                 1.23
+  data arrival time                                                 -1.23
+  --------------------------------------------------------------------------
+  slack (MET)                                                        0.00
+
+
+1

@@ -79,7 +79,7 @@ module VX_commit import VX_gpu_pkg::*, VX_trace_pkg::*; #(
         assign per_issue_commit_eop[i]  = commit_arb_if[i].data.eop;
     end
 
-    // CSRs update     （这条数据路径，延迟 4 cycle）
+    // CSRs update     （这条数据路径，延迟 arb 1 + 3  = 4 cycle）
     // 更新commit_csr_if.instret： 每个硬件threads执行提交指令的次数的总和。  可以理解，对比一个单线程CPU要提交指令的次数总和。
     // 分三步计算：
     // st1: 计算每个issue提交的指令数量，并寄存器化。 这里的指令数量是指每个issue提交的指令中有多少个线程在执行。 这个数量在commit阶段是可以直接计算出来的，因为commit接口中已经包含了每条指令的线程掩码了。
@@ -139,7 +139,7 @@ module VX_commit import VX_gpu_pkg::*, VX_trace_pkg::*; #(
             end
         end
     end
-    assign commit_csr_if.instret = instret;  // 给到csr后，其实还要一个周期才能更新到CSR寄存器中。
+    assign commit_csr_if.instret = instret;  // csr模块中映射为 MINSTRET 寄存器。 这个寄存器的值就是所有线程执行提交指令的总和。 这个设计可以让我们在软件层面上通过读取MINSTRET寄存器来获取GPU执行了多少条指令，从而进行性能分析和优化。
 
     // Track committed instructions
 

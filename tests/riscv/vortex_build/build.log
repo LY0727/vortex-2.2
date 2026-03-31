@@ -1,0 +1,76 @@
+=== 编译 ===
+In file included from /mnt/ssd2/lao/coremark/coremark.h:38,
+                 from /mnt/ssd2/lao/coremark/core_list_join.c:19:
+/mnt/ssd2/lao/vortex-2.2/tests/riscv/vortex_build/core_portme.h:28: warning: "COMPILER_FLAGS" redefined
+   28 | #define COMPILER_FLAGS "rv32imaf-O3"
+      | 
+<command-line>: note: this is the location of the previous definition
+/mnt/ssd2/lao/coremark/coremark.h:44: warning: "ee_printf" redefined
+   44 | #define ee_printf printf
+      | 
+/mnt/ssd2/lao/vortex-2.2/tests/riscv/vortex_build/core_portme.h:31: note: this is the location of the previous definition
+   31 | #define ee_printf vx_printf
+      | 
+In file included from /mnt/ssd2/lao/coremark/coremark.h:38,
+                 from /mnt/ssd2/lao/coremark/core_main.c:23:
+/mnt/ssd2/lao/vortex-2.2/tests/riscv/vortex_build/core_portme.h:28: warning: "COMPILER_FLAGS" redefined
+   28 | #define COMPILER_FLAGS "rv32imaf-O3"
+      | 
+<command-line>: note: this is the location of the previous definition
+/mnt/ssd2/lao/coremark/coremark.h:44: warning: "ee_printf" redefined
+   44 | #define ee_printf printf
+      | 
+/mnt/ssd2/lao/vortex-2.2/tests/riscv/vortex_build/core_portme.h:31: note: this is the location of the previous definition
+   31 | #define ee_printf vx_printf
+      | 
+In file included from /mnt/ssd2/lao/coremark/coremark.h:38,
+                 from /mnt/ssd2/lao/coremark/core_matrix.c:19:
+/mnt/ssd2/lao/vortex-2.2/tests/riscv/vortex_build/core_portme.h:28: warning: "COMPILER_FLAGS" redefined
+   28 | #define COMPILER_FLAGS "rv32imaf-O3"
+      | 
+<command-line>: note: this is the location of the previous definition
+/mnt/ssd2/lao/coremark/coremark.h:44: warning: "ee_printf" redefined
+   44 | #define ee_printf printf
+      | 
+/mnt/ssd2/lao/vortex-2.2/tests/riscv/vortex_build/core_portme.h:31: note: this is the location of the previous definition
+   31 | #define ee_printf vx_printf
+      | 
+In file included from /mnt/ssd2/lao/coremark/coremark.h:38,
+                 from /mnt/ssd2/lao/coremark/core_state.c:19:
+/mnt/ssd2/lao/vortex-2.2/tests/riscv/vortex_build/core_portme.h:28: warning: "COMPILER_FLAGS" redefined
+   28 | #define COMPILER_FLAGS "rv32imaf-O3"
+      | 
+<command-line>: note: this is the location of the previous definition
+/mnt/ssd2/lao/coremark/coremark.h:44: warning: "ee_printf" redefined
+   44 | #define ee_printf printf
+      | 
+/mnt/ssd2/lao/vortex-2.2/tests/riscv/vortex_build/core_portme.h:31: note: this is the location of the previous definition
+   31 | #define ee_printf vx_printf
+      | 
+In file included from /mnt/ssd2/lao/coremark/coremark.h:38,
+                 from /mnt/ssd2/lao/coremark/core_util.c:19:
+/mnt/ssd2/lao/vortex-2.2/tests/riscv/vortex_build/core_portme.h:28: warning: "COMPILER_FLAGS" redefined
+   28 | #define COMPILER_FLAGS "rv32imaf-O3"
+      | 
+<command-line>: note: this is the location of the previous definition
+/mnt/ssd2/lao/coremark/coremark.h:44: warning: "ee_printf" redefined
+   44 | #define ee_printf printf
+      | 
+/mnt/ssd2/lao/vortex-2.2/tests/riscv/vortex_build/core_portme.h:31: note: this is the location of the previous definition
+   31 | #define ee_printf vx_printf
+      | 
+In file included from /mnt/ssd2/lao/coremark/coremark.h:38,
+                 from /mnt/ssd2/lao/vortex-2.2/tests/riscv/vortex_build/vortex_portme.c:1:
+/mnt/ssd2/lao/vortex-2.2/tests/riscv/vortex_build/core_portme.h:28: warning: "COMPILER_FLAGS" redefined
+   28 | #define COMPILER_FLAGS "rv32imaf-O3"
+      | 
+<command-line>: note: this is the location of the previous definition
+/mnt/ssd2/lao/coremark/coremark.h:44: warning: "ee_printf" redefined
+   44 | #define ee_printf printf
+      | 
+/mnt/ssd2/lao/vortex-2.2/tests/riscv/vortex_build/core_portme.h:31: note: this is the location of the previous definition
+   31 | #define ee_printf vx_printf
+      | 
+=== 生成 bin ===
+=== 反汇编 ===
+完成！

@@ -1,0 +1,54 @@
+ 
+****************************************
+Report : power
+        -analysis_effort low
+Design : VX_core_top
+Version: T-2022.03-SP2
+Date   : Sat Mar 28 01:51:04 2026
+****************************************
+
+
+Library(s) Used:
+
+    scc40nll_hdc50_lvt_ff_v1p21_0c_basic (File: /home/lao/works/backend-example/test/lib/scc40nll_hdc50_lvt_ff_v1p21_0c_basic.db)
+
+
+Operating Conditions: ff_v1p21_0c   Library: scc40nll_hdc50_lvt_ff_v1p21_0c_basic
+Wire Load Model Mode: top
+
+
+Global Operating Voltage = 1.21 
+Power-specific unit information :
+    Voltage Units = 1V
+    Capacitance Units = 1.000000pf
+    Time Units = 1ns
+    Dynamic Power Units = 1mW    (derived from V,C,T units)
+    Leakage Power Units = 1uW
+
+
+Attributes
+----------
+i - Including register clock pin internal power
+
+
+  Cell Internal Power  =  83.6351 mW   (99%)
+  Net Switching Power  = 614.7614 uW    (1%)
+                         ---------
+Total Dynamic Power    =  84.2499 mW  (100%)
+
+Cell Leakage Power     = 281.3846 uW
+
+
+                 Internal         Switching           Leakage            Total
+Power Group      Power            Power               Power              Power   (   %    )  Attrs
+--------------------------------------------------------------------------------------------------
+io_pad             0.0000            0.0000            0.0000            0.0000  (   0.00%)
+memory             0.0000            0.0000            0.0000            0.0000  (   0.00%)
+black_box          0.0000            0.0000            0.0000            0.0000  (   0.00%)
+clock_network     83.2674            0.0000            0.0000            0.0000  (   0.00%)  i
+register           0.1082        7.8818e-02          157.6218           83.6119  (  98.90%)
+sequential         0.0000            0.0000            0.0000            0.0000  (   0.00%)
+combinational      0.2722            0.5359          123.7628            0.9318  (   1.10%)
+--------------------------------------------------------------------------------------------------
+Total             83.6477 mW         0.6148 mW       281.3846 uW        84.5436 mW
+1

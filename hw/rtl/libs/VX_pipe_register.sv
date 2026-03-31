@@ -36,9 +36,9 @@ module VX_pipe_register #(
             localparam NUM_SLICES = `CDIV(DATAW, MAX_FANOUT);
             localparam N_DATAW = DATAW / NUM_SLICES;
             for (genvar i = 0; i < NUM_SLICES; ++i) begin
-                localparam SLICE_START = i * N_DATAW;
-                localparam SLICE_END = SLICE_START + S_DATAW - 1;
+                localparam SLICE_START = i * N_DATAW;                
                 localparam S_DATAW = (i == NUM_SLICES-1) ? (DATAW - SLICE_START) : N_DATAW;
+                localparam SLICE_END = SLICE_START + S_DATAW - 1;
                 localparam S_RESETW = (SLICE_END >= (DATAW - RESETW)) ?
                                         ((SLICE_START >= (DATAW - RESETW)) ? S_DATAW : (SLICE_END - (DATAW - RESETW) + 1)) : 0;
                 VX_pipe_register #(

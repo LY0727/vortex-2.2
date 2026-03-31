@@ -1,0 +1,200 @@
+Information: Updating design information... (UID-85)
+Warning: Design 'VX_core_top' contains 1 high-fanout nets. A fanout number of 1000 will be used for delay calculations involving these nets. (TIM-134)
+ 
+****************************************
+Report : timing
+        -path full
+        -delay max
+        -max_paths 1
+Design : VX_core_top
+Version: T-2022.03-SP2
+Date   : Sat Mar 28 02:37:53 2026
+****************************************
+
+ # A fanout number of 1000 was used for high fanout net computations.
+
+Operating Conditions: ff_v1p21_0c   Library: scc40nll_hdc50_lvt_ff_v1p21_0c_basic
+Wire Load Model Mode: top
+
+  Startpoint: core/issue/issue_slices[0].issue_slice/dispatch/genblk2[0].buffer/genblk1.out_buf/genblk1.genblk1[0].pipe_register/genblk1.genblk1.genblk1.value_d_reg[363]
+              (rising edge-triggered flip-flop clocked by VCLK)
+  Endpoint: core/execute/alu_unit/genblk1[0].muldiv_unit/genblk1[3].multiplier/genblk2.prod_r_reg[0][63]
+            (rising edge-triggered flip-flop clocked by VCLK)
+  Path Group: VCLK
+  Path Type: max
+
+  Point                                                   Incr       Path
+  --------------------------------------------------------------------------
+  clock VCLK (rise edge)                                  0.00       0.00
+  clock network delay (ideal)                             0.00       0.00
+  core/issue/issue_slices[0].issue_slice/dispatch/genblk2[0].buffer/genblk1.out_buf/genblk1.genblk1[0].pipe_register/genblk1.genblk1.genblk1.value_d_reg[363]/CK (DQV2_8TL50)
+                                                          0.00 #     0.00 r
+  core/issue/issue_slices[0].issue_slice/dispatch/genblk2[0].buffer/genblk1.out_buf/genblk1.genblk1[0].pipe_register/genblk1.genblk1.genblk1.value_d_reg[363]/Q (DQV2_8TL50)
+                                                          0.13       0.13 r
+  core/issue/issue_slices[0].issue_slice/dispatch/genblk2[0].buffer/genblk1.out_buf/genblk1.genblk1[0].pipe_register/data_out[363] (VX_pipe_register_DATAW516_RESETW1_6)
+                                                          0.00       0.13 r
+  core/issue/issue_slices[0].issue_slice/dispatch/genblk2[0].buffer/genblk1.out_buf/data_out[363] (VX_pipe_buffer_DATAW515_DEPTH1_6)
+                                                          0.00       0.13 r
+  core/issue/issue_slices[0].issue_slice/dispatch/genblk2[0].buffer/data_out[363] (VX_elastic_buffer_DATAW515_SIZE2_OUT_REG2_LUTRAM1_6)
+                                                          0.00       0.13 r
+  core/issue/issue_slices[0].issue_slice/dispatch/dispatch_if[0].data[rs1_data][3][11] (VX_dispatch_INSTANCE_ID_I_operands_if_VX_operands_if__I_dispatch_if_VX_dispatch_if_master__1)
+                                                          0.00       0.13 r
+  core/issue/issue_slices[0].issue_slice/dispatch_if[0].data[rs1_data][3][11] (VX_issue_slice_INSTANCE_ID_ISSUE_ID0_I_decode_if_VX_decode_if__NUM_WARPS_8I_writeback_if_VX_writeback_if_slave_I_dispatch_if_VX_dispatch_if__)
+                                                          0.00       0.13 r
+  core/issue/dispatch_if[0].data[rs1_data][3][11] (VX_issue_INSTANCE_ID_I_decode_if_VX_decode_if__I_writeback_if_VX_writeback_if__I_dispatch_if_VX_dispatch_if__)
+                                                          0.00       0.13 r
+  core/execute/dispatch_if[0].data[rs1_data][3][11] (VX_execute_INSTANCE_ID_CORE_ID0_I_lsu_mem_if_VX_lsu_mem_if__NUM_LANES_4_DATA_SIZE_4_TAG_WIDTH_45I_dispatch_if_VX_dispatch_if__I_commit_if_VX_commit_if__I_sched_csr_if_VX_sched_csr_if__I_branch_ctl_if_VX_branch_ctl_if__I_warp_ctl_if_VX_warp_ctl_if__I_commit_csr_if_VX_commit_csr_if__)
+                                                          0.00       0.13 r
+  core/execute/alu_unit/dispatch_if[0].data[rs1_data][3][11] (VX_alu_unit_INSTANCE_ID_I_dispatch_if_VX_dispatch_if__I_commit_if_VX_commit_if__I_branch_ctl_if_VX_branch_ctl_if_master_)
+                                                          0.00       0.13 r
+  core/execute/alu_unit/dispatch_unit/dispatch_if[0].data[rs1_data][3][11] (VX_dispatch_unit_BLOCK_SIZE2_NUM_LANES4_OUT_BUF0_I_dispatch_if_VX_dispatch_if_slave_I_execute_if_VX_execute_if__NUM_LANES_4)
+                                                          0.00       0.13 r
+  core/execute/alu_unit/dispatch_unit/genblk3[0].buf_out/data_in[366] (VX_elastic_buffer_DATAW519_SIZE0_OUT_REG0_1)
+                                                          0.00       0.13 r
+  core/execute/alu_unit/dispatch_unit/genblk3[0].buf_out/data_out[366] (VX_elastic_buffer_DATAW519_SIZE0_OUT_REG0_1)
+                                                          0.00       0.13 r
+  core/execute/alu_unit/dispatch_unit/execute_if[0].data[rs1_data][3][11] (VX_dispatch_unit_BLOCK_SIZE2_NUM_LANES4_OUT_BUF0_I_dispatch_if_VX_dispatch_if_slave_I_execute_if_VX_execute_if__NUM_LANES_4)
+                                                          0.00       0.13 r
+  core/execute/alu_unit/genblk1[0].muldiv_unit/execute_if.data[rs1_data][3][11] (VX_alu_muldiv_INSTANCE_ID_NUM_LANES4_I_execute_if_VX_execute_if__NUM_LANES_4I_commit_if_VX_commit_if__NUM_LANES_4_1)
+                                                          0.00       0.13 r
+  core/execute/alu_unit/genblk1[0].muldiv_unit/genblk1[3].multiplier/dataa[11] (VX_multiplier_A_WIDTH33_B_WIDTH33_R_WIDTH66_SIGNED1_LATENCY4_4)
+                                                          0.00       0.13 r
+  core/execute/alu_unit/genblk1[0].muldiv_unit/genblk1[3].multiplier/U12/ZN (INV2_8TL50)
+                                                          0.02       0.15 f
+  core/execute/alu_unit/genblk1[0].muldiv_unit/genblk1[3].multiplier/U20/ZN (INV2_8TL50)
+                                                          0.07       0.22 r
+  core/execute/alu_unit/genblk1[0].muldiv_unit/genblk1[3].multiplier/U895/ZN (XNOR2V2_8TL50)
+                                                          0.05       0.26 f
+  core/execute/alu_unit/genblk1[0].muldiv_unit/genblk1[3].multiplier/U897/ZN (INAND2V2_8TL50)
+                                                          0.05       0.32 f
+  core/execute/alu_unit/genblk1[0].muldiv_unit/genblk1[3].multiplier/U898/ZN (INV2_8TL50)
+                                                          0.02       0.34 r
+  core/execute/alu_unit/genblk1[0].muldiv_unit/genblk1[3].multiplier/U74/ZN (INV2_8TL50)
+                                                          0.03       0.37 f
+  core/execute/alu_unit/genblk1[0].muldiv_unit/genblk1[3].multiplier/U1121/ZN (OAI21V2_8TL50)
+                                                          0.03       0.41 r
+  core/execute/alu_unit/genblk1[0].muldiv_unit/genblk1[3].multiplier/U1122/Z (XOR2V2_8TL50)
+                                                          0.04       0.44 f
+  core/execute/alu_unit/genblk1[0].muldiv_unit/genblk1[3].multiplier/U1371/CO (ADH1V2C_8TL50)
+                                                          0.03       0.47 f
+  core/execute/alu_unit/genblk1[0].muldiv_unit/genblk1[3].multiplier/U1205/CO (ADH1V2C_8TL50)
+                                                          0.03       0.50 f
+  core/execute/alu_unit/genblk1[0].muldiv_unit/genblk1[3].multiplier/U1190/CO (ADH1V2C_8TL50)
+                                                          0.03       0.53 f
+  core/execute/alu_unit/genblk1[0].muldiv_unit/genblk1[3].multiplier/U1194/CO (AD1V2C_8TL50)
+                                                          0.05       0.58 f
+  core/execute/alu_unit/genblk1[0].muldiv_unit/genblk1[3].multiplier/U1195/CO (AD1V2C_8TL50)
+                                                          0.05       0.64 f
+  core/execute/alu_unit/genblk1[0].muldiv_unit/genblk1[3].multiplier/U1183/S (AD1V2C_8TL50)
+                                                          0.08       0.71 r
+  core/execute/alu_unit/genblk1[0].muldiv_unit/genblk1[3].multiplier/U1217/S (AD1V2C_8TL50)
+                                                          0.06       0.78 f
+  core/execute/alu_unit/genblk1[0].muldiv_unit/genblk1[3].multiplier/U1197/ZN (NOR2V2_8TL50)
+                                                          0.04       0.81 r
+  core/execute/alu_unit/genblk1[0].muldiv_unit/genblk1[3].multiplier/U1409/ZN (OAI21V2_8TL50)
+                                                          0.02       0.83 f
+  core/execute/alu_unit/genblk1[0].muldiv_unit/genblk1[3].multiplier/U1411/ZN (AOI21V2_8TL50)
+                                                          0.02       0.86 r
+  core/execute/alu_unit/genblk1[0].muldiv_unit/genblk1[3].multiplier/U1412/ZN (OAI21V2_8TL50)
+                                                          0.02       0.88 f
+  core/execute/alu_unit/genblk1[0].muldiv_unit/genblk1[3].multiplier/U1419/ZN (AOI21V2_8TL50)
+                                                          0.04       0.91 r
+  core/execute/alu_unit/genblk1[0].muldiv_unit/genblk1[3].multiplier/U1533/ZN (OAI21V2_8TL50)
+                                                          0.02       0.93 f
+  core/execute/alu_unit/genblk1[0].muldiv_unit/genblk1[3].multiplier/U1613/ZN (AOI21V2_8TL50)
+                                                          0.03       0.97 r
+  core/execute/alu_unit/genblk1[0].muldiv_unit/genblk1[3].multiplier/U1655/ZN (OAI21V2_8TL50)
+                                                          0.02       0.99 f
+  core/execute/alu_unit/genblk1[0].muldiv_unit/genblk1[3].multiplier/U1697/ZN (AOI21V2_8TL50)
+                                                          0.03       1.03 r
+  core/execute/alu_unit/genblk1[0].muldiv_unit/genblk1[3].multiplier/U1741/ZN (OAI21V2_8TL50)
+                                                          0.02       1.05 f
+  core/execute/alu_unit/genblk1[0].muldiv_unit/genblk1[3].multiplier/U1786/ZN (AOI21V2_8TL50)
+                                                          0.03       1.08 r
+  core/execute/alu_unit/genblk1[0].muldiv_unit/genblk1[3].multiplier/U1833/ZN (OAI21V2_8TL50)
+                                                          0.02       1.11 f
+  core/execute/alu_unit/genblk1[0].muldiv_unit/genblk1[3].multiplier/U1880/ZN (AOI21V2_8TL50)
+                                                          0.03       1.14 r
+  core/execute/alu_unit/genblk1[0].muldiv_unit/genblk1[3].multiplier/U1927/ZN (OAI21V2_8TL50)
+                                                          0.02       1.16 f
+  core/execute/alu_unit/genblk1[0].muldiv_unit/genblk1[3].multiplier/U1973/ZN (AOI21V2_8TL50)
+                                                          0.03       1.20 r
+  core/execute/alu_unit/genblk1[0].muldiv_unit/genblk1[3].multiplier/U2016/ZN (OAI21V2_8TL50)
+                                                          0.02       1.22 f
+  core/execute/alu_unit/genblk1[0].muldiv_unit/genblk1[3].multiplier/U2058/ZN (AOI21V2_8TL50)
+                                                          0.03       1.26 r
+  core/execute/alu_unit/genblk1[0].muldiv_unit/genblk1[3].multiplier/U2100/ZN (OAI21V2_8TL50)
+                                                          0.02       1.28 f
+  core/execute/alu_unit/genblk1[0].muldiv_unit/genblk1[3].multiplier/U2139/ZN (AOI21V2_8TL50)
+                                                          0.03       1.31 r
+  core/execute/alu_unit/genblk1[0].muldiv_unit/genblk1[3].multiplier/U2178/ZN (OAI21V2_8TL50)
+                                                          0.02       1.34 f
+  core/execute/alu_unit/genblk1[0].muldiv_unit/genblk1[3].multiplier/U2215/ZN (AOI21V2_8TL50)
+                                                          0.03       1.37 r
+  core/execute/alu_unit/genblk1[0].muldiv_unit/genblk1[3].multiplier/U2251/ZN (OAI21V2_8TL50)
+                                                          0.02       1.40 f
+  core/execute/alu_unit/genblk1[0].muldiv_unit/genblk1[3].multiplier/U2285/ZN (AOI21V2_8TL50)
+                                                          0.03       1.43 r
+  core/execute/alu_unit/genblk1[0].muldiv_unit/genblk1[3].multiplier/U2319/ZN (OAI21V2_8TL50)
+                                                          0.02       1.45 f
+  core/execute/alu_unit/genblk1[0].muldiv_unit/genblk1[3].multiplier/U2350/ZN (AOI21V2_8TL50)
+                                                          0.03       1.49 r
+  core/execute/alu_unit/genblk1[0].muldiv_unit/genblk1[3].multiplier/U2381/ZN (OAI21V2_8TL50)
+                                                          0.02       1.51 f
+  core/execute/alu_unit/genblk1[0].muldiv_unit/genblk1[3].multiplier/U2411/ZN (AOI21V2_8TL50)
+                                                          0.03       1.55 r
+  core/execute/alu_unit/genblk1[0].muldiv_unit/genblk1[3].multiplier/U2439/ZN (OAI21V2_8TL50)
+                                                          0.02       1.57 f
+  core/execute/alu_unit/genblk1[0].muldiv_unit/genblk1[3].multiplier/U2466/ZN (AOI21V2_8TL50)
+                                                          0.03       1.60 r
+  core/execute/alu_unit/genblk1[0].muldiv_unit/genblk1[3].multiplier/U2492/ZN (OAI21V2_8TL50)
+                                                          0.02       1.63 f
+  core/execute/alu_unit/genblk1[0].muldiv_unit/genblk1[3].multiplier/U2513/ZN (AOI21V2_8TL50)
+                                                          0.03       1.66 r
+  core/execute/alu_unit/genblk1[0].muldiv_unit/genblk1[3].multiplier/U2522/ZN (OAI21V2_8TL50)
+                                                          0.02       1.69 f
+  core/execute/alu_unit/genblk1[0].muldiv_unit/genblk1[3].multiplier/U2529/ZN (AOI21V2_8TL50)
+                                                          0.03       1.72 r
+  core/execute/alu_unit/genblk1[0].muldiv_unit/genblk1[3].multiplier/U2534/ZN (OAI21V2_8TL50)
+                                                          0.02       1.74 f
+  core/execute/alu_unit/genblk1[0].muldiv_unit/genblk1[3].multiplier/U2567/CO (AD1V2C_8TL50)
+                                                          0.05       1.80 f
+  core/execute/alu_unit/genblk1[0].muldiv_unit/genblk1[3].multiplier/U2564/CO (AD1V2C_8TL50)
+                                                          0.05       1.85 f
+  core/execute/alu_unit/genblk1[0].muldiv_unit/genblk1[3].multiplier/U2561/CO (AD1V2C_8TL50)
+                                                          0.05       1.91 f
+  core/execute/alu_unit/genblk1[0].muldiv_unit/genblk1[3].multiplier/U2557/CO (AD1V2C_8TL50)
+                                                          0.05       1.96 f
+  core/execute/alu_unit/genblk1[0].muldiv_unit/genblk1[3].multiplier/U2554/CO (AD1V2C_8TL50)
+                                                          0.05       2.01 f
+  core/execute/alu_unit/genblk1[0].muldiv_unit/genblk1[3].multiplier/U2551/CO (AD1V2C_8TL50)
+                                                          0.05       2.07 f
+  core/execute/alu_unit/genblk1[0].muldiv_unit/genblk1[3].multiplier/U2548/CO (AD1V2C_8TL50)
+                                                          0.05       2.12 f
+  core/execute/alu_unit/genblk1[0].muldiv_unit/genblk1[3].multiplier/U2545/CO (AD1V2C_8TL50)
+                                                          0.05       2.18 f
+  core/execute/alu_unit/genblk1[0].muldiv_unit/genblk1[3].multiplier/U2536/CO (AD1V2C_8TL50)
+                                                          0.05       2.23 f
+  core/execute/alu_unit/genblk1[0].muldiv_unit/genblk1[3].multiplier/U2541/Z (XOR2V2_8TL50)
+                                                          0.04       2.26 r
+  core/execute/alu_unit/genblk1[0].muldiv_unit/genblk1[3].multiplier/U2542/Z (CKMUX2V2_8TL50)
+                                                          0.03       2.29 r
+  core/execute/alu_unit/genblk1[0].muldiv_unit/genblk1[3].multiplier/genblk2.prod_r_reg[0][63]/D (DQV2_8TL50)
+                                                          0.00       2.29 r
+  data arrival time                                                  2.29
+
+  clock VCLK (rise edge)                                  2.50       2.50
+  clock network delay (ideal)                             0.00       2.50
+  clock uncertainty                                      -0.20       2.30
+  core/execute/alu_unit/genblk1[0].muldiv_unit/genblk1[3].multiplier/genblk2.prod_r_reg[0][63]/CK (DQV2_8TL50)
+                                                          0.00       2.30 r
+  library setup time                                     -0.01       2.29
+  data required time                                                 2.29
+  --------------------------------------------------------------------------
+  data required time                                                 2.29
+  data arrival time                                                 -2.29
+  --------------------------------------------------------------------------
+  slack (MET)                                                        0.00
+
+
+1

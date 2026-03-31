@@ -34,7 +34,9 @@ module VX_multiplier #(
     end else begin
         assign prod_w = R_WIDTH'(dataa * datab);
     end
-    
+    // 很好的工业级写法， * 运算符的结果直接送到寄存器里，综合工具会根据 LATENCY 参数自动 pipelining
+    // 这里需要了解一下综合工具的  retiming 优化，retiming 会自动在组合逻辑中插入寄存器以满足时序约束，LATENCY 参数告诉综合工具乘法器的期望延迟，从而指导它如何插入寄存器。
+    // 也是很值得思考的问题，大多数情况下，自己手动流水优化和相信DC哪个会更优呢？哈哈
     if (LATENCY == 0) begin
         assign result = prod_w;
     end else begin        

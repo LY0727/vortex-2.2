@@ -232,8 +232,8 @@ import VX_fpu_pkg::*;
                     `ifdef EXT_F_ENABLE
                         `CSR_READ_64(`VX_CSR_MPM_SCRB_FPU, read_data_ro_r, pipeline_perf_if.issue.units_uses[`EX_FPU]);
                     `else
-                        // `CSR_READ_64(`VX_CSR_MPM_SCRB_FPU, read_data_ro_r, `PERF_CTR_BITS'(0));
-                        `VX_CSR_MPM_SCRB_FPU, (`VX_CSR_MPM_SCRB_FPU + 12'h80): read_data_ro_r = '0;
+                        `CSR_READ_64(`VX_CSR_MPM_SCRB_FPU, read_data_ro_r, `PERF_CTR_BITS'(0));
+                        // `VX_CSR_MPM_SCRB_FPU, (`VX_CSR_MPM_SCRB_FPU + 12'h80): read_data_ro_r = '0;
                     `endif
                         `CSR_READ_64(`VX_CSR_MPM_SCRB_LSU, read_data_ro_r, pipeline_perf_if.issue.units_uses[`EX_LSU]);
                         `CSR_READ_64(`VX_CSR_MPM_SCRB_SFU, read_data_ro_r, pipeline_perf_if.issue.units_uses[`EX_SFU]);
